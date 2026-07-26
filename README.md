@@ -1,5 +1,3 @@
-# econ-empire
-Economics game 
 # Econ Empire
 
 **Econ Empire** is an educational economic strategy game where players manage a fictional economy, make policy decisions, and observe the consequences over time.
