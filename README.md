@@ -1,75 +1,129 @@
-# React + TypeScript + Vite
+# 🏛️ Econ Empire
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An educational strategy game where the player serves as the leader of a nation and manages its economy through fiscal and monetary policy.
 
-Currently, two official plugins are available:
+The goal is to balance economic growth, inflation, unemployment, national debt, and public approval while responding to changing economic conditions.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+# Current Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- 📊 Economic Dashboard
+- 📰 Dynamic News System
+- ⚙️ Quarterly Economic Simulation
+- 💰 Fiscal Policy Variables
+- 🏦 Monetary Policy Variables
+- ⚛️ Built with React + TypeScript
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+# Technology Stack
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- React
+- TypeScript
+- Vite
+- Git
+- GitHub
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Project Structure
 
+```text
+src/
+├── components/
+│   ├── Dashboard.tsx
+│   └── NewsPanel.tsx
+├── data/
+├── engine/
+│   └── simulation.ts
+├── models/
+│   └── GameState.ts
+├── styles/
+├── App.tsx
+└── main.tsx
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+# Development Roadmap
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Phase 1 – Foundation ✅
 
-```
+- Dashboard
+- News Panel
+- Simulation Engine
+- Policy Variables
+- GitHub Integration
+
+## Phase 2 – Core Gameplay
+
+- Interactive Policy Controls
+- Tax System
+- Government Spending
+- Interest Rate Decisions
+- Budget Deficit & Surplus
+- Economic Indicators
+
+## Phase 3 – Advanced Economics
+
+- Central Bank
+- Trade
+- Exchange Rates
+- Population Growth
+- Labor Market
+- Housing Market
+- Financial Markets
+
+## Phase 4 – Politics
+
+- Elections
+- Political Parties
+- Approval Ratings
+- Campaign Promises
+- Legislative Challenges
+
+## Phase 5 – World Simulation
+
+- AI Nations
+- International Trade
+- Diplomatic Relations
+- Global Recessions
+- Financial Crises
+
+---
+
+# Vision
+
+Econ Empire is designed to be both an engaging strategy game and an educational economics simulator.
+
+Players should learn:
+
+- Fiscal Policy
+- Monetary Policy
+- GDP Growth
+- Inflation
+- Unemployment
+- Government Debt
+- Business Cycles
+- International Trade
+
+through interactive decision-making rather than traditional lectures.
+
+---
+
+# Long-Term Goals
+
+- Desktop release
+- Steam release
+- Classroom edition for economics courses
+- Scenario editor
+- Multiplayer economic competition
+
+---
+
+## Developed by
+
+**Michael Quintana**
+
+Economist • Educator • Software Developer
