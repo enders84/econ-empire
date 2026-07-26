@@ -5,14 +5,19 @@ import Dashboard from "./components/Dashboard";
 import NewsPanel from "./components/NewsPanel";
 
 function App() {
-  const [economy, setEconomy] = useState<GameState>({
-    gdp: 500,
-    inflation: 2.0,
-    unemployment: 5.0,
-    debt: 200,
-    approval: 60,
-    quarter: 1,
-  });
+const [economy, setEconomy] = useState<GameState>({
+  quarter: 1,
+
+  gdp: 500,
+  inflation: 2.0,
+  unemployment: 5.0,
+  debt: 200,
+  approval: 60,
+
+  incomeTax: 25,
+  governmentSpending: 150,
+  interestRate: 4.5,
+});
 
   const [headline, setHeadline] = useState(
     "The economy remains stable as the new administration takes office."

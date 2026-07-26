@@ -19,7 +19,7 @@ function Dashboard({ economy }: DashboardProps) {
     >
       <h1>🏛️ Econ Empire</h1>
 
-      <h2>Republic of Econia</h2>
+      <h2>Middle Earth</h2>
 
       <h3>Quarter {economy.quarter}</h3>
 
@@ -30,6 +30,15 @@ function Dashboard({ economy }: DashboardProps) {
       <p>👷 Unemployment: {economy.unemployment.toFixed(1)}%</p>
       <p>🏦 National Debt: ${economy.debt} Billion</p>
       <p>😊 Approval: {economy.approval}%</p>
+      <hr />
+
+<h3>Current Policies</h3>
+
+<p>💰 Income Tax: {economy.incomeTax}%</p>
+
+<p>🏛️ Government Spending: ${economy.governmentSpending} Billion</p>
+
+<p>🏦 Interest Rate: {economy.interestRate}%</p>
     </div>
   );
 }
