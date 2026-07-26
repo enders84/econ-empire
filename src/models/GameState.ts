@@ -11,6 +11,10 @@ export interface GameState {
 
   // Player Policies
   incomeTax: number;
-  governmentSpending: number;
+  educationSpending: number;
+healthcareSpending: number;
+defenseSpending: number;
+infrastructureSpending: number;
+scienceSpending: number;
   interestRate: number;
 }

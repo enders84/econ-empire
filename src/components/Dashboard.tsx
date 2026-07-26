@@ -36,7 +36,17 @@ function Dashboard({ economy }: DashboardProps) {
 
 <p>💰 Income Tax: {economy.incomeTax}%</p>
 
-<p>🏛️ Government Spending: ${economy.governmentSpending} Billion</p>
+<p>
+  🏛️ Total Government Spending: $
+  {(
+    economy.educationSpending +
+    economy.healthcareSpending +
+    economy.defenseSpending +
+    economy.infrastructureSpending +
+    economy.scienceSpending
+  ).toFixed(0)}
+  B
+</p>
 
 <p>🏦 Interest Rate: {economy.interestRate}%</p>
     </div>
