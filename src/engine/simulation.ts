@@ -1,42 +1,133 @@
 import type { GameState } from "../models/GameState";
+import type { GameEvent } from "../models/GameEvent";
 
-import { applyRandomEvent } from "./events";
-import { applyFiscalPolicy } from "./fiscalPolicy";
-import { applyMonetaryPolicy } from "./monetaryPolicy";
-import { updateEconomy } from "./economy";
-import { updateApproval } from "./approval";
+import { updateEconomy } from "./economy/economy";
+import { updateApproval } from "./politics/approval.ts";
+import { applyFiscalPolicy } from "./policies/fiscalPolicy";
+import { applyMonetaryPolicy } from "./policies/monetaryPolicy";
+import { applyRandomEvent } from "./events/applyRandomEvent";
 
-export function simulateQuarter(state: GameState) {
-  const next = { ...state };
+export interface SimulationResult {
+  economy: GameState;
+  event: GameEvent | null;
+}
 
-  next.quarter += 1;
+function safeNumber(
+  value: number,
+  fallback: number
+): number {
+  return Number.isFinite(value)
+    ? value
+    : fallback;
+}
 
-  applyFiscalPolicy(next);
-  console.log("After fiscal policy:", next);
+function clamp(
+  value: number,
+  minimum: number,
+  maximum: number
+): number {
+  return Math.min(
+    maximum,
+    Math.max(minimum, value)
+  );
+}
 
-  applyMonetaryPolicy(next);
-  console.log("After monetary policy:", next);
+function normalizeGameState(
+  state: GameState,
+  fallback: GameState,
+  quarter: number
+): GameState {
+  return {
+    ...state,
 
-  updateEconomy(next);
-  console.log("After economy update:", next);
+    quarter,
 
-  const event = applyRandomEvent(next);
-  console.log("After random event:", next);
+    gdp: clamp(
+      safeNumber(state.gdp, fallback.gdp),
+      100,
+      1_000_000
+    ),
 
-  updateApproval(state, next);
-  console.log("After approval:", next);
+    inflation: clamp(
+      safeNumber(
+        state.inflation,
+        fallback.inflation
+      ),
+      -2,
+      30
+    ),
 
-  next.inflation = Math.max(0, next.inflation);
-  next.unemployment = Math.max(2, next.unemployment);
-  next.gdp = Math.max(100, next.gdp);
-  next.debt = Math.max(0, next.debt);
-  next.approval = Math.min(
-    100,
-    Math.max(0, next.approval)
+    unemployment: clamp(
+      safeNumber(
+        state.unemployment,
+        fallback.unemployment
+      ),
+      2,
+      35
+    ),
+
+    debt: Math.max(
+      0,
+      safeNumber(state.debt, fallback.debt)
+    ),
+
+    approval: clamp(
+      safeNumber(
+        state.approval,
+        fallback.approval
+      ),
+      0,
+      100
+    ),
+  };
+}
+
+export function simulateQuarter(
+  state: GameState,
+  random: () => number = Math.random
+): SimulationResult {
+  const currentQuarter = safeNumber(
+    state.quarter,
+    1
+  );
+
+  const nextQuarter = currentQuarter + 1;
+
+  let next: GameState = {
+    ...state,
+    quarter: nextQuarter,
+  };
+
+  next = applyFiscalPolicy(next);
+
+  next = applyMonetaryPolicy(next);
+
+  next = updateEconomy(
+    next,
+    random
+  );
+
+  const eventResult = applyRandomEvent(
+    next,
+    random
+  );
+
+  next = eventResult.state;
+
+  next = updateApproval(
+    state,
+    next,
+    random
+  );
+
+  next = normalizeGameState(
+    next,
+    state,
+    nextQuarter
   );
 
   return {
     economy: next,
-    event,
+    event: eventResult.event,
   };
 }

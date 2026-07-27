@@ -7,14 +7,24 @@ export interface GameState {
   inflation: number;
   unemployment: number;
   debt: number;
+
+  // Treasury
+  revenue: number;
+  expenses: number;
+  budgetBalance: number;
+  interestPayments: number;
+  debtToGdp: number;
+
   approval: number;
 
-  // Player Policies
+  // Fiscal Policy
   incomeTax: number;
   educationSpending: number;
-healthcareSpending: number;
-defenseSpending: number;
-infrastructureSpending: number;
-scienceSpending: number;
+  healthcareSpending: number;
+  defenseSpending: number;
+  infrastructureSpending: number;
+  scienceSpending: number;
+
+  // Monetary Policy
   interestRate: number;
 }

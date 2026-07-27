@@ -1,8 +1,8 @@
 export interface EconomicHistory {
-  quarter: number;
-  gdp: number;
-  inflation: number;
-  unemployment: number;
-  debt: number;
-  approval: number;
+  readonly quarter: number;
+  readonly gdp: number;
+  readonly inflation: number;
+  readonly unemployment: number;
+  readonly debt: number;
+  readonly approval: number;
 }

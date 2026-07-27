@@ -1,24 +1,34 @@
+import {
+  Paper,
+  Typography,
+} from "@mui/material";
+
 interface NewsPanelProps {
   headline: string;
 }
 
-function NewsPanel({ headline }: NewsPanelProps) {
+export default function NewsPanel({
+  headline,
+}: NewsPanelProps) {
   return (
-    <div
-      style={{
-        backgroundColor: "#f8fafc",
-        border: "2px solid #d1d5db",
-        borderRadius: "10px",
-        padding: "20px",
-        maxWidth: "500px",
-        margin: "20px auto",
+    <Paper
+      elevation={4}
+      sx={{
+        p: 3,
       }}
     >
-      <h2>📰 Economic News</h2>
+      <Typography
+        variant="h5"
+        fontWeight="bold"
+        gutterBottom
+      >
+        📰 Economic News
+      </Typography>
 
-      <p style={{ fontSize: "18px" }}>{headline}</p>
-    </div>
+      <Typography color="text.secondary">
+        {headline ||
+          "No major economic news this quarter."}
+      </Typography>
+    </Paper>
   );
 }
-
-export default NewsPanel;

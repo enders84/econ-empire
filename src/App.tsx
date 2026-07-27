@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Alert,
   AppBar,
   Box,
   Button,
@@ -12,75 +11,143 @@ import {
   Typography,
 } from "@mui/material";
 
-import PolicyPanel from "./components/PolicyPanel";
 import EconomicChart from "./components/EconomicChart";
+import HomeScreen from "./components/HomeScreen";
+import NewGameScreen from "./components/NewGameScreen";
+import PolicyPanel, {
+  type PolicyField,
+} from "./components/PolicyPanel";
+import DashboardPanel from "./components/panels/DashboardPanel";
+import EconomicNewsPanel from "./components/panels/EconomicNewsPanel";
+import QuarterlyEventPanel from "./components/panels/QuarterlyEventPanel";
+import WorldNewsPanel from "./components/panels/WorldNewsPanel";
+import TreasuryPanel from "./components/TreasuryPanel";
+import { countries } from "./data/countries";
 
+import { holdElection } from "./engine/politics/election.ts";
 import { simulateQuarter } from "./engine/simulation";
+import { getRandomNews } from "./engine/world/news";
 
-import type { GameState } from "./models/GameState";
 import type { EconomicHistory } from "./models/EconomicHistory";
+import type { ElectionResult } from "./models/Election";
 import type { GameEvent } from "./models/GameEvent";
+import type { GameState } from "./models/GameState";
+import type { NewsArticle } from "./models/NewsArticle";
+type GameScreen =
+  | "home"
+  | "new-game"
+  | "single-player"
+  | "multiplayer";
+
+const ELECTION_INTERVAL = 16;
+
+const DEFAULT_HEADLINE =
+  "Welcome to Econ Empire. Adjust your policies and guide the economy.";
 
 const initialEconomy: GameState = {
   quarter: 1,
 
   gdp: 500,
-  inflation: 3,
+  inflation: 2.5,
   unemployment: 5,
   debt: 300,
   approval: 60,
-
+  revenue: 0,
+  expenses: 0,
+  budgetBalance: 0,
+  interestPayments: 0,
+  debtToGdp: 0,
   incomeTax: 25,
+
   educationSpending: 40,
-healthcareSpending: 45,
-defenseSpending: 25,
-infrastructureSpending: 25,
-scienceSpending: 15,
-  interestRate: 4.5,
+  healthcareSpending: 45,
+  defenseSpending: 25,
+  infrastructureSpending: 25,
+  scienceSpending: 15,
+
+  interestRate: 3,
 };
 
+function createHistoryRecord(
+  economy: GameState
+): EconomicHistory {
+  return {
+    quarter: economy.quarter,
+    gdp: economy.gdp,
+    inflation: economy.inflation,
+    unemployment: economy.unemployment,
+    debt: economy.debt,
+    approval: economy.approval,
+  };
+}
+
 function App() {
+  const [gameScreen, setGameScreen] =
+    useState<GameScreen>("home");
+
   const [economy, setEconomy] =
     useState<GameState>(initialEconomy);
 
-  const [headline, setHeadline] = useState(
-    "Welcome to Econ Empire. Adjust your policies and guide the economy."
-  );
+  const [selectedCountry, setSelectedCountry] =
+    useState("United States");
+
+  const [leaderName, setLeaderName] =
+    useState("");
+
+  const [difficulty, setDifficulty] =
+    useState("Student");
+
+  const [headline, setHeadline] =
+    useState(DEFAULT_HEADLINE);
+
+  const [news, setNews] =
+    useState<NewsArticle | null>(() =>
+      getRandomNews()
+    );
 
   const [currentEvent, setCurrentEvent] =
     useState<GameEvent | null>(null);
 
-  const [history, setHistory] = useState<EconomicHistory[]>([
-    {
-      quarter: initialEconomy.quarter,
-      gdp: initialEconomy.gdp,
-      inflation: initialEconomy.inflation,
-      unemployment: initialEconomy.unemployment,
-      debt: initialEconomy.debt,
-      approval: initialEconomy.approval,
-    },
+  const [electionResult, setElectionResult] =
+    useState<ElectionResult | null>(null);
+
+  const [history, setHistory] = useState<
+    EconomicHistory[]
+  >([
+    createHistoryRecord(initialEconomy),
   ]);
 
-  function endQuarter() {
-  const result = simulateQuarter(economy);
+ function endQuarter(): void {
+  const simulationResult =
+    simulateQuarter(economy);
 
-  const nextEconomy = result.economy;
-  const quarterlyEvent = result.event;
+  const nextEconomy =
+    simulationResult.economy;
+
+  const quarterlyEvent =
+    simulationResult.event;
 
   setEconomy(nextEconomy);
   setCurrentEvent(quarterlyEvent);
+  setNews(getRandomNews());
 
   setHistory((previousHistory) => [
     ...previousHistory,
-    {
-      quarter: nextEconomy.quarter,
-      gdp: nextEconomy.gdp,
-      inflation: nextEconomy.inflation,
-      unemployment: nextEconomy.unemployment,
-      debt: nextEconomy.debt,
-      approval: nextEconomy.approval,
-    },
+    createHistoryRecord(nextEconomy),
   ]);
+
+  if (
+    nextEconomy.quarter %
+      ELECTION_INTERVAL ===
+    0
+  ) {
+    const result =
+      holdElection(nextEconomy);
+
+    setElectionResult(result);
+  } else {
+    setElectionResult(null);
+  }
 
   if (quarterlyEvent) {
     setHeadline(
@@ -91,193 +158,243 @@ function App() {
       "The quarter passed without a major economic event."
     );
   }
+
+  setSummaryOpen(true);
+}
+function handlePolicyChange(
+  field: PolicyField,
+  value: number
+): void {
+  setEconomy((previousEconomy) => ({
+    ...previousEconomy,
+    [field]: value,
+  }));
 }
 
+  function startNewGame(
+    country: string,
+    newLeaderName: string,
+    newDifficulty: string
+  ): void {
+    const startingEconomy =
+      countries[country] ??
+      initialEconomy;
+
+    const newEconomy: GameState = {
+      ...startingEconomy,
+      quarter: 1,
+    };
+
+    setSelectedCountry(country);
+    setLeaderName(newLeaderName);
+    setDifficulty(newDifficulty);
+
+    setEconomy(newEconomy);
+
+    setHistory([
+      createHistoryRecord(newEconomy),
+    ]);
+
+    setCurrentEvent(null);
+  setElectionResult(null);
+  setNews(getRandomNews());
+
+    setHeadline(
+      `Welcome, ${
+        newLeaderName.trim() || "Leader"
+      }. You are now leading ${country}.`
+    );
+
+    setGameScreen("single-player");
+  }
+
+  function returnToMainMenu(): void {
+    setGameScreen("home");
+  }
+
+if (gameScreen === "home") {
   return (
     <>
       <CssBaseline />
 
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h5" fontWeight="bold">
-            🌍 Econ Empire
-          </Typography>
+      <HomeScreen
+        onSinglePlayer={() =>
+          setGameScreen("new-game")
+        }
+        onMultiplayer={() =>
+          setGameScreen("multiplayer")
+        }
+      />
+    </>
+  );
+}
 
-          <Typography sx={{ ml: "auto" }}>
-            Quarter {economy.quarter}
-          </Typography>
-        </Toolbar>
-      </AppBar>
+  if (gameScreen === "new-game") {
+    return (
+      <>
+        <CssBaseline />
 
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Stack spacing={3}>
-          <Paper elevation={4} sx={{ p: 3 }}>
+        <NewGameScreen
+          onStartGame={startNewGame}
+        />
+      </>
+    );
+  }
+
+  if (gameScreen === "multiplayer") {
+    return (
+      <>
+        <CssBaseline />
+
+        <Box
+          sx={{
+            minHeight: "100vh",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "#eef5ff",
+            px: 2,
+          }}
+        >
+          <Paper
+            elevation={6}
+            sx={{
+              p: 5,
+              width: 500,
+              maxWidth: "100%",
+              textAlign: "center",
+            }}
+          >
             <Typography
               variant="h4"
               fontWeight="bold"
               gutterBottom
             >
-              Economic Dashboard
+              Multiplayer Classroom
             </Typography>
 
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: {
-                  xs: "1fr",
-                  sm: "repeat(2, 1fr)",
-                  md: "repeat(5, 1fr)",
-                },
-                gap: 2,
-                mt: 2,
-              }}
+            <Typography sx={{ mb: 3 }}>
+              Classroom multiplayer is
+              currently under development.
+            </Typography>
+
+            <Button
+              variant="contained"
+              onClick={returnToMainMenu}
             >
-              <EconomicStat
-                label="GDP"
-                value={`$${economy.gdp.toFixed(1)}B`}
-              />
-
-              <EconomicStat
-                label="Inflation"
-                value={`${economy.inflation.toFixed(1)}%`}
-              />
-
-              <EconomicStat
-                label="Unemployment"
-                value={`${economy.unemployment.toFixed(1)}%`}
-              />
-
-              <EconomicStat
-                label="National Debt"
-                value={`$${economy.debt.toFixed(1)}B`}
-              />
-
-              <EconomicStat
-                label="Approval"
-                value={`${economy.approval.toFixed(0)}%`}
-              />
-            </Box>
+              Return to Main Menu
+            </Button>
           </Paper>
+        </Box>
+      </>
+    );
+  }
 
-          <Alert severity={currentEvent ? "warning" : "info"}>
-            <Typography fontWeight="bold">
-              📰 Economic News
+ return (
+  <>
+    <CssBaseline />
+
+    <AppBar position="static">
+      <Toolbar
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 2,
+        }}
+      >
+        <Typography variant="h5">
+          🌍 Econ Empire
+        </Typography>
+
+        <Box sx={{ textAlign: "right" }}>
+          <Typography
+            variant="subtitle1"
+            fontWeight="bold"
+          >
+            {selectedCountry}
+          </Typography>
+
+          <Typography variant="body2">
+            Leader: {leaderName || "Unknown"}
+          </Typography>
+
+          <Typography variant="body2">
+            Difficulty: {difficulty}
+          </Typography>
+        </Box>
+      </Toolbar>
+    </AppBar>
+
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Stack spacing={3}>
+        <DashboardPanel economy={economy} />
+        <TreasuryPanel economy={economy} />
+        <EconomicNewsPanel headline={headline} />
+
+        {currentEvent && (
+          <QuarterlyEventPanel
+            event={currentEvent}
+          />
+        )}
+
+        {news && (
+          <WorldNewsPanel news={news} />
+        )}
+
+        <PolicyPanel
+  economy={economy}
+  onPolicyChange={handlePolicyChange}
+/>
+
+        <Button
+          variant="contained"
+          size="large"
+          onClick={endQuarter}
+        >
+          End Quarter
+        </Button>
+
+        {electionResult && (
+          <Paper elevation={6} sx={{ p: 4 }}>
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              gutterBottom
+            >
+              🗳 Election Results
             </Typography>
 
-            {headline}
-          </Alert>
+            <Typography
+              variant="h6"
+              color={
+                electionResult.playerWon
+                  ? "success.main"
+                  : "error.main"
+              }
+            >
+              {electionResult.playerWon
+                ? "You were reelected!"
+                : "You lost the election."}
+            </Typography>
 
-          {currentEvent && (
-            <Paper elevation={4} sx={{ p: 3 }}>
-              <Typography
-                variant="h5"
-                fontWeight="bold"
-                gutterBottom
-              >
-                🎲 Quarterly Event: {currentEvent.name}
-              </Typography>
+            <Typography sx={{ mt: 2 }}>
+              {electionResult.message}
+            </Typography>
+          </Paper>
+        )}
 
-              <Typography sx={{ mb: 2 }}>
-                {currentEvent.description}
-              </Typography>
+        <EconomicChart history={history} />
 
-              <Stack spacing={0.5}>
-                <Typography>
-                  GDP effect:{" "}
-                  {formatEffect(
-                    currentEvent.gdp,
-                    "$",
-                    " billion"
-                  )}
-                </Typography>
-
-                <Typography>
-                  Inflation effect:{" "}
-                  {formatEffect(
-                    currentEvent.inflation,
-                    "",
-                    "%"
-                  )}
-                </Typography>
-
-                <Typography>
-                  Unemployment effect:{" "}
-                  {formatEffect(
-                    currentEvent.unemployment,
-                    "",
-                    "%"
-                  )}
-                </Typography>
-
-                <Typography>
-                  Approval effect:{" "}
-                  {formatEffect(
-                    currentEvent.approval,
-                    "",
-                    "%"
-                  )}
-                </Typography>
-              </Stack>
-            </Paper>
-          )}
-
-          <PolicyPanel
-            economy={economy}
-            setEconomy={setEconomy}
-          />
-
-          <Button
-            variant="contained"
-            size="large"
-            onClick={endQuarter}
-            sx={{ alignSelf: "center", px: 6 }}
-          >
-            End Quarter
-          </Button>
-
-          {<EconomicChart history={history} />}
-        </Stack>
-      </Container>
-    </>
-  );
-}
-
-interface EconomicStatProps {
-  label: string;
-  value: string;
-}
-
-function EconomicStat({
-  label,
-  value,
-}: EconomicStatProps) {
-  return (
-    <Paper
-      variant="outlined"
-      sx={{
-        p: 2,
-        textAlign: "center",
-      }}
-    >
-      <Typography color="text.secondary">
-        {label}
-      </Typography>
-
-      <Typography variant="h5" fontWeight="bold">
-        {value}
-      </Typography>
-    </Paper>
-  );
-}
-
-function formatEffect(
-  value: number,
-  prefix: string,
-  suffix: string
-) {
-  const sign = value > 0 ? "+" : "";
-
-  return `${sign}${prefix}${value}${suffix}`;
+        <Button
+          variant="outlined"
+          onClick={returnToMainMenu}
+        >
+          Return to Main Menu
+        </Button>
+      </Stack>
+    </Container>
+      </>
+);
 }
 
 export default App;
