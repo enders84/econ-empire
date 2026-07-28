@@ -1,19 +1,14 @@
-import type { GameState } from "./GameState";
-
-export type EventEffects = Partial<
-  Pick<
-    GameState,
-    | "gdp"
-    | "inflation"
-    | "unemployment"
-    | "approval"
-    | "debt"
-  >
->;
+export interface GameEventEffects {
+  gdpPercent?: number;
+  inflation?: number;
+  unemployment?: number;
+  approval?: number;
+  debt?: number;
+}
 
 export interface GameEvent {
-  readonly name: string;
-  readonly description: string;
-
-  readonly effects: EventEffects;
+  id: string;
+  title: string;
+  description: string;
+  effects: GameEventEffects;
 }

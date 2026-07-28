@@ -1,16 +1,4 @@
-export type CountryId =
-  | "united-states"
-  | "china"
-  | "japan"
-  | "germany"
-  | "india"
-  | "united-kingdom"
-  | "france"
-  | "canada"
-  | "mexico"
-  | "brazil"
-  | "australia"
-  | "south-korea";
+import type { CountryId } from "../models/Country";
 
 export interface CountryOption {
   id: CountryId;

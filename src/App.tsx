@@ -7,394 +7,304 @@ import {
   CssBaseline,
   Paper,
   Stack,
+  ThemeProvider,
   Toolbar,
   Typography,
+  createTheme,
 } from "@mui/material";
 
-import EconomicChart from "./components/EconomicChart";
-import HomeScreen from "./components/HomeScreen";
-import NewGameScreen from "./components/NewGameScreen";
 import PolicyPanel, {
-  type PolicyField,
+  type PolicyDraft,
 } from "./components/PolicyPanel";
-import DashboardPanel from "./components/panels/DashboardPanel";
-import EconomicNewsPanel from "./components/panels/EconomicNewsPanel";
-import QuarterlyEventPanel from "./components/panels/QuarterlyEventPanel";
-import WorldNewsPanel from "./components/panels/WorldNewsPanel";
-import TreasuryPanel from "./components/TreasuryPanel";
-import { countries } from "./data/countries";
-
-import { holdElection } from "./engine/politics/election.ts";
-import { simulateQuarter } from "./engine/simulation";
-import { getRandomNews } from "./engine/world/news";
-
-import type { EconomicHistory } from "./models/EconomicHistory";
-import type { ElectionResult } from "./models/Election";
-import type { GameEvent } from "./models/GameEvent";
+import StatCard from "./components/StatCard";
+import { createDefaultGameState } from "./data/initialCountries";
+import { advanceQuarter } from "./engine/advanceQuarter";
 import type { GameState } from "./models/GameState";
-import type { NewsArticle } from "./models/NewsArticle";
-type GameScreen =
-  | "home"
-  | "new-game"
-  | "single-player"
-  | "multiplayer";
 
-const ELECTION_INTERVAL = 16;
+const theme = createTheme({
+  palette: {
+    mode: "dark",
+    background: {
+      default: "#10141f",
+      paper: "#1a2030",
+    },
+    primary: {
+      main: "#6ea8fe",
+    },
+  },
+});
 
-const DEFAULT_HEADLINE =
-  "Welcome to Econ Empire. Adjust your policies and guide the economy.";
-
-const initialEconomy: GameState = {
-  quarter: 1,
-
-  gdp: 500,
-  inflation: 2.5,
-  unemployment: 5,
-  debt: 300,
-  approval: 60,
-  revenue: 0,
-  expenses: 0,
-  budgetBalance: 0,
-  interestPayments: 0,
-  debtToGdp: 0,
-  incomeTax: 25,
-
-  educationSpending: 40,
-  healthcareSpending: 45,
-  defenseSpending: 25,
-  infrastructureSpending: 25,
-  scienceSpending: 15,
-
-  interestRate: 3,
-};
-
-function createHistoryRecord(
-  economy: GameState
-): EconomicHistory {
+function createPolicies(state: GameState): PolicyDraft {
   return {
-    quarter: economy.quarter,
-    gdp: economy.gdp,
-    inflation: economy.inflation,
-    unemployment: economy.unemployment,
-    debt: economy.debt,
-    approval: economy.approval,
+    incomeTax: state.treasury.incomeTax,
+    interestRate: state.economy.interestRate,
+    educationSpending: state.treasury.educationSpending,
+    healthcareSpending: state.treasury.healthcareSpending,
+    defenseSpending: state.treasury.defenseSpending,
+    infrastructureSpending: state.treasury.infrastructureSpending,
+    scienceSpending: state.treasury.scienceSpending,
   };
 }
 
+const money = (value: number): string =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2,
+  }).format(value);
+const percent = (value: number) => `${value.toFixed(1)}%`;
+
 function App() {
-  const [gameScreen, setGameScreen] =
-    useState<GameScreen>("home");
+  const [gameState, setGameState] = useState<GameState>(() =>
+    createDefaultGameState(),
+  );
 
-  const [economy, setEconomy] =
-    useState<GameState>(initialEconomy);
+  const [policies, setPolicies] = useState<PolicyDraft>(() =>
+    createPolicies(createDefaultGameState()),
+  );
 
-  const [selectedCountry, setSelectedCountry] =
-    useState("United States");
+  const handlePolicyChange = (
+    policy: keyof PolicyDraft,
+    value: number,
+  ) => {
+    setPolicies((current) => ({
+      ...current,
+      [policy]: value,
+    }));
+  };
 
-  const [leaderName, setLeaderName] =
-    useState("");
+  const handleNextQuarter = () => {
+    setGameState((current) => {
+      const stateWithPolicies: GameState = {
+        ...current,
+        economy: {
+          ...current.economy,
+          interestRate: policies.interestRate,
+        },
+        treasury: {
+          ...current.treasury,
+          incomeTax: policies.incomeTax,
+          educationSpending: policies.educationSpending,
+          healthcareSpending: policies.healthcareSpending,
+          defenseSpending: policies.defenseSpending,
+          infrastructureSpending: policies.infrastructureSpending,
+          scienceSpending: policies.scienceSpending,
+        },
+      };
 
-  const [difficulty, setDifficulty] =
-    useState("Student");
-
-  const [headline, setHeadline] =
-    useState(DEFAULT_HEADLINE);
-
-  const [news, setNews] =
-    useState<NewsArticle | null>(() =>
-      getRandomNews()
-    );
-
-  const [currentEvent, setCurrentEvent] =
-    useState<GameEvent | null>(null);
-
-  const [electionResult, setElectionResult] =
-    useState<ElectionResult | null>(null);
-
-  const [history, setHistory] = useState<
-    EconomicHistory[]
-  >([
-    createHistoryRecord(initialEconomy),
-  ]);
-
- function endQuarter(): void {
-  const simulationResult =
-    simulateQuarter(economy);
-
-  const nextEconomy =
-    simulationResult.economy;
-
-  const quarterlyEvent =
-    simulationResult.event;
-
-  setEconomy(nextEconomy);
-  setCurrentEvent(quarterlyEvent);
-  setNews(getRandomNews());
-
-  setHistory((previousHistory) => [
-    ...previousHistory,
-    createHistoryRecord(nextEconomy),
-  ]);
-
-  if (
-    nextEconomy.quarter %
-      ELECTION_INTERVAL ===
-    0
-  ) {
-    const result =
-      holdElection(nextEconomy);
-
-    setElectionResult(result);
-  } else {
-    setElectionResult(null);
-  }
-
-  if (quarterlyEvent) {
-    setHeadline(
-      `${quarterlyEvent.name}: ${quarterlyEvent.description}`
-    );
-  } else {
-    setHeadline(
-      "The quarter passed without a major economic event."
-    );
-  }
-
-  setSummaryOpen(true);
-}
-function handlePolicyChange(
-  field: PolicyField,
-  value: number
-): void {
-  setEconomy((previousEconomy) => ({
-    ...previousEconomy,
-    [field]: value,
-  }));
-}
-
-  function startNewGame(
-    country: string,
-    newLeaderName: string,
-    newDifficulty: string
-  ): void {
-    const startingEconomy =
-      countries[country] ??
-      initialEconomy;
-
-    const newEconomy: GameState = {
-      ...startingEconomy,
-      quarter: 1,
-    };
-
-    setSelectedCountry(country);
-    setLeaderName(newLeaderName);
-    setDifficulty(newDifficulty);
-
-    setEconomy(newEconomy);
-
-    setHistory([
-      createHistoryRecord(newEconomy),
-    ]);
-
-    setCurrentEvent(null);
-  setElectionResult(null);
-  setNews(getRandomNews());
-
-    setHeadline(
-      `Welcome, ${
-        newLeaderName.trim() || "Leader"
-      }. You are now leading ${country}.`
-    );
-
-    setGameScreen("single-player");
-  }
-
-  function returnToMainMenu(): void {
-    setGameScreen("home");
-  }
-
-if (gameScreen === "home") {
+          return advanceQuarter(stateWithPolicies);
+    });
+  };
   return (
-    <>
+    
+    <ThemeProvider theme={theme}>
       <CssBaseline />
 
-      <HomeScreen
-        onSinglePlayer={() =>
-          setGameScreen("new-game")
-        }
-        onMultiplayer={() =>
-          setGameScreen("multiplayer")
-        }
-      />
-    </>
-  );
-}
+      <AppBar position="static">
+        <Toolbar>
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography variant="h5" sx={{ fontWeight: 800 }}>
+              Econ Empire
+            </Typography>
 
-  if (gameScreen === "new-game") {
-    return (
-      <>
-        <CssBaseline />
+            <Typography variant="body2">
+              National Economic Strategy Simulator
+            </Typography>
+          </Box>
 
-        <NewGameScreen
-          onStartGame={startNewGame}
-        />
-      </>
-    );
-  }
+          <Typography variant="h6">
+            Quarter {gameState.quarter}
+          </Typography>
+        </Toolbar>
+      </AppBar>
 
-  if (gameScreen === "multiplayer") {
-    return (
-      <>
-        <CssBaseline />
-
-        <Box
-          sx={{
-            minHeight: "100vh",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "#eef5ff",
-            px: 2,
-          }}
-        >
-          <Paper
-            elevation={6}
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Stack spacing={3}>
+          <Box
             sx={{
-              p: 5,
-              width: 500,
-              maxWidth: "100%",
-              textAlign: "center",
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "repeat(2, 1fr)",
+                md: "repeat(4, 1fr)",
+              },
+              gap: 2,
             }}
           >
-            <Typography
-              variant="h4"
-              fontWeight="bold"
-              gutterBottom
-            >
-              Multiplayer Classroom
-            </Typography>
+            <StatCard
+              title="GDP"
+              value={money(gameState.economy.gdp)}
+            />
 
-            <Typography sx={{ mb: 3 }}>
-              Classroom multiplayer is
-              currently under development.
-            </Typography>
+            <StatCard
+              title="Inflation"
+              value={percent(gameState.economy.inflation)}
+            />
 
-            <Button
-              variant="contained"
-              onClick={returnToMainMenu}
-            >
-              Return to Main Menu
-            </Button>
-          </Paper>
-        </Box>
-      </>
-    );
-  }
+            <StatCard
+              title="Unemployment"
+              value={percent(gameState.economy.unemployment)}
+            />
 
- return (
-  <>
-    <CssBaseline />
+            <StatCard
+              title="Interest Rate"
+              value={percent(gameState.economy.interestRate)}
+            />
+          </Box>
 
-    <AppBar position="static">
-      <Toolbar
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 2,
-        }}
-      >
-        <Typography variant="h5">
-          🌍 Econ Empire
-        </Typography>
+          <Box
+  sx={{
+    display: "grid",
+    gridTemplateColumns: {
+      xs: "1fr",
+      sm: "repeat(2, 1fr)",
+      md: "repeat(4, 1fr)",
+    },
+    gap: 2,
+  }}
+>
+  <StatCard
+    title="National Debt"
+    value={money(gameState.treasury.debt)}
+  />
 
-        <Box sx={{ textAlign: "right" }}>
-          <Typography
-            variant="subtitle1"
-            fontWeight="bold"
-          >
-            {selectedCountry}
-          </Typography>
+  <StatCard
+    title="Debt-to-GDP"
+    value={percent(gameState.treasury.debtToGdp)}
+  />
 
-          <Typography variant="body2">
-            Leader: {leaderName || "Unknown"}
-          </Typography>
+  <StatCard
+    title="Budget Balance"
+    value={money(gameState.treasury.budgetBalance)}
+  />
 
-          <Typography variant="body2">
-            Difficulty: {difficulty}
-          </Typography>
-        </Box>
-      </Toolbar>
-    </AppBar>
+  <StatCard
+    title="Approval Rating"
+    value={percent(gameState.politics.approval)}
+  />
+</Box>
 
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Stack spacing={3}>
-        <DashboardPanel economy={economy} />
-        <TreasuryPanel economy={economy} />
-        <EconomicNewsPanel headline={headline} />
+<Box
+  sx={{
+    display: "grid",
+    gridTemplateColumns: {
+      xs: "1fr",
+      sm: "repeat(2, 1fr)",
+      md: "repeat(5, 1fr)",
+    },
+    gap: 2,
+  }}
+>
+  <StatCard
+    title="Consumption"
+    value={money(gameState.economy.consumption)}
+  />
 
-        {currentEvent && (
-          <QuarterlyEventPanel
-            event={currentEvent}
+  <StatCard
+    title="Investment"
+    value={money(gameState.economy.investment)}
+  />
+
+  <StatCard
+    title="Government"
+    value={money(gameState.economy.governmentSpending)}
+  />
+
+  <StatCard
+    title="Exports"
+    value={money(gameState.economy.exports)}
+  />
+
+  <StatCard
+    title="Imports"
+    value={money(gameState.economy.imports)}
+  />
+</Box>
+      <Paper sx={{ p: 2 }}>
+  <Typography variant="body1" sx={{ fontWeight: 700 }}>
+    GDP Check
+  </Typography>
+
+  <Typography sx={{ color: "text.secondary" }}>
+    {money(gameState.economy.consumption)} +{" "}
+    {money(gameState.economy.investment)} +{" "}
+    {money(gameState.economy.governmentSpending)} + ({" "}
+    {money(gameState.economy.exports)} −{" "}
+    {money(gameState.economy.imports)} ) ={" "}
+    {money(gameState.economy.gdp)}
+  </Typography>
+</Paper>
+        <Box
+  sx={{
+    display: "grid",
+    gridTemplateColumns: {
+      xs: "1fr",
+      sm: "repeat(2, 1fr)",
+      md: "repeat(4, 1fr)",
+    },
+    gap: 2,
+  }}
+>
+  <StatCard
+    title="Tax Revenue"
+    value={money(gameState.treasury.revenue)}
+  />
+
+  <StatCard
+    title="Total Expenses"
+    value={money(gameState.treasury.expenses)}
+  />
+
+  <StatCard
+    title="Interest Payments"
+    value={money(gameState.treasury.interestPayments)}
+  />
+
+  <StatCard
+    title="Program Spending"
+    value={money(gameState.economy.governmentSpending)}
+  />
+</Box>
+          <PolicyPanel
+            policies={policies}
+            onPolicyChange={handlePolicyChange}
           />
-        )}
 
-        {news && (
-          <WorldNewsPanel news={news} />
-        )}
-
-        <PolicyPanel
-  economy={economy}
-  onPolicyChange={handlePolicyChange}
-/>
-
-        <Button
-          variant="contained"
-          size="large"
-          onClick={endQuarter}
-        >
-          End Quarter
-        </Button>
-
-        {electionResult && (
-          <Paper elevation={6} sx={{ p: 4 }}>
-            <Typography
-              variant="h4"
-              fontWeight="bold"
-              gutterBottom
+          <Paper sx={{ p: 3 }}>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              sx={{
+                alignItems: {
+                  xs: "stretch",
+                  sm: "center",
+                },
+                justifyContent: "space-between",
+              }}
             >
-              🗳 Election Results
-            </Typography>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  Advance the Simulation
+                </Typography>
 
-            <Typography
-              variant="h6"
-              color={
-                electionResult.playerWon
-                  ? "success.main"
-                  : "error.main"
-              }
-            >
-              {electionResult.playerWon
-                ? "You were reelected!"
-                : "You lost the election."}
-            </Typography>
+                <Typography sx={{ color: "text.secondary" }}>
+                  Apply the selected policies and simulate the next quarter.
+                </Typography>
+              </Box>
 
-            <Typography sx={{ mt: 2 }}>
-              {electionResult.message}
-            </Typography>
+              <Button
+                variant="contained"
+                size="large"
+                onClick={handleNextQuarter}
+              >
+                Advance Quarter
+              </Button>
+            </Stack>
           </Paper>
-        )}
-
-        <EconomicChart history={history} />
-
-        <Button
-          variant="outlined"
-          onClick={returnToMainMenu}
-        >
-          Return to Main Menu
-        </Button>
-      </Stack>
-    </Container>
-      </>
-);
+        </Stack>
+      </Container>
+    </ThemeProvider>
+  );
 }
 
 export default App;

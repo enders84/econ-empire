@@ -1,30 +1,52 @@
-export interface GameState {
-  // Time
-  quarter: number;
-
-  // Economy
+export interface EconomyState {
   gdp: number;
+  potentialGdp: number;
+  outputGap: number;
+  productivity: number;
+
+  consumption: number;
+  investment: number;
+  governmentSpending: number;
+  exports: number;
+  imports: number;
+
   inflation: number;
   unemployment: number;
-  debt: number;
+  interestRate: number;
+}
 
-  // Treasury
+export interface TreasuryState {
   revenue: number;
   expenses: number;
   budgetBalance: number;
-  interestPayments: number;
+
+  debt: number;
   debtToGdp: number;
+  interestPayments: number;
 
-  approval: number;
-
-  // Fiscal Policy
   incomeTax: number;
+
   educationSpending: number;
   healthcareSpending: number;
   defenseSpending: number;
   infrastructureSpending: number;
   scienceSpending: number;
-
-  // Monetary Policy
-  interestRate: number;
 }
+
+export interface PoliticalState {
+  approval: number;
+
+  electionYear: number;
+  currentYear: number;
+}
+
+export interface GameState {
+  quarter: number;
+
+  economy: EconomyState;
+
+  treasury: TreasuryState;
+
+  politics: PoliticalState;
+}
+

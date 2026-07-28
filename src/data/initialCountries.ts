@@ -1,67 +1,52 @@
-import type { Country } from "../models/Country";
 import type { GameState } from "../models/GameState";
 
 export function createDefaultGameState(): GameState {
+  const initialGDP = 1000;
+  const initialDebt = 600;
+
   return {
     quarter: 1,
 
-    gdp: 500,
-    inflation: 3,
-    unemployment: 5,
-    debt: 300,
-    approval: 60,
+    economy: {
+  gdp: initialGDP,
+  potentialGdp: initialGDP,
+  outputGap: 0,
 
-    incomeTax: 25,
-    educationSpending: 40,
-    healthcareSpending: 45,
-    defenseSpending: 25,
-    infrastructureSpending: 25,
-    scienceSpending: 15,
-    interestRate: 4.5,
+  productivity: 1,
+
+  consumption: 650,
+  investment: 250,
+  governmentSpending: 200,
+  exports: 150,
+  imports: 50,
+
+  inflation: 2,
+  unemployment: 5,
+  interestRate: 3,
+},
+
+    treasury: {
+      revenue: 0,
+      expenses: 0,
+      budgetBalance: 0,
+
+      debt: initialDebt,
+      debtToGdp: (initialDebt / initialGDP) * 100,
+      interestPayments: 0,
+
+      incomeTax: 25,
+
+      educationSpending: 50,
+      healthcareSpending: 50,
+      defenseSpending: 50,
+      infrastructureSpending: 50,
+      scienceSpending: 50,
+    },
+
+    politics: {
+      approval: 50,
+      electionYear: 4,
+      currentYear: 1,
+    },
   };
 }
-
-export const initialCountries: readonly Country[] = [
-  {
-    id: "arcadia",
-    name: "Arcadia",
-    isPlayerControlled: true,
-    strategy: "balanced",
-    economy: createDefaultGameState(),
-  },
-  {
-    id: "novara",
-    name: "Novara",
-    isPlayerControlled: false,
-    strategy: "growth",
-    economy: createDefaultGameState(),
-  },
-  {
-    id: "asteria",
-    name: "Asteria",
-    isPlayerControlled: false,
-    strategy: "innovation",
-    economy: createDefaultGameState(),
-  },
-  {
-    id: "solmere",
-    name: "Solmere",
-    isPlayerControlled: false,
-    strategy: "social-welfare",
-    economy: createDefaultGameState(),
-  },
-  {
-    id: "rivoria",
-    name: "Rivoria",
-    isPlayerControlled: false,
-    strategy: "exports",
-    economy: createDefaultGameState(),
-  },
-  {
-    id: "valkara",
-    name: "Valkara",
-    isPlayerControlled: false,
-    strategy: "inflation-control",
-    economy: createDefaultGameState(),
-  },
-];

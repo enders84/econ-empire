@@ -1,198 +1,271 @@
 import {
   Box,
+  Divider,
   Paper,
   Slider,
-  Stack,
   Typography,
 } from "@mui/material";
 
-import type { GameState } from "../models/GameState";
-
-export type PolicyField =
-  | "incomeTax"
-  | "educationSpending"
-  | "healthcareSpending"
-  | "defenseSpending"
-  | "infrastructureSpending"
-  | "scienceSpending"
-  | "interestRate";
+export interface PolicyDraft {
+  incomeTax: number;
+  interestRate: number;
+  educationSpending: number;
+  healthcareSpending: number;
+  defenseSpending: number;
+  infrastructureSpending: number;
+  scienceSpending: number;
+}
 
 interface PolicyPanelProps {
-  economy: GameState;
+  policies: PolicyDraft;
   onPolicyChange: (
-    field: PolicyField,
-    value: number
+    policy: keyof PolicyDraft,
+    value: number,
   ) => void;
-}
-
-interface PolicyDefinition {
-  field: PolicyField;
-  label: string;
-  min: number;
-  max: number;
-  step?: number;
-  prefix?: string;
-  suffix?: string;
-}
-
-const policyDefinitions: PolicyDefinition[] = [
-  {
-    field: "incomeTax",
-    label: "Income Tax",
-    min: 10,
-    max: 50,
-    suffix: "%",
-  },
-  {
-    field: "educationSpending",
-    label: "🎓 Education",
-    min: 0,
-    max: 100,
-    prefix: "$",
-    suffix: "B",
-  },
-  {
-    field: "healthcareSpending",
-    label: "🏥 Healthcare",
-    min: 0,
-    max: 100,
-    prefix: "$",
-    suffix: "B",
-  },
-  {
-    field: "defenseSpending",
-    label: "🛡️ Defense",
-    min: 0,
-    max: 100,
-    prefix: "$",
-    suffix: "B",
-  },
-  {
-    field: "infrastructureSpending",
-    label: "🛣️ Infrastructure",
-    min: 0,
-    max: 100,
-    prefix: "$",
-    suffix: "B",
-  },
-  {
-    field: "scienceSpending",
-    label: "🔬 Science",
-    min: 0,
-    max: 100,
-    prefix: "$",
-    suffix: "B",
-  },
-  {
-    field: "interestRate",
-    label: "Interest Rate",
-    min: 0,
-    max: 10,
-    step: 0.25,
-    suffix: "%",
-  },
-];
-
-export default function PolicyPanel({
-  economy,
-  onPolicyChange,
-}: PolicyPanelProps) {
-  return (
-    <Paper elevation={4} sx={{ p: 3 }}>
-      <Typography
-        variant="h4"
-        align="center"
-        fontWeight="bold"
-        gutterBottom
-      >
-        🏛 Government Policy
-      </Typography>
-
-      <Typography
-        align="center"
-        color="text.secondary"
-        sx={{ mb: 3 }}
-      >
-        Adjust taxes, spending, and interest rates
-        before ending the quarter.
-      </Typography>
-
-      <Stack spacing={3}>
-        {policyDefinitions.map((policy) => (
-          <PolicySlider
-            key={policy.field}
-            label={policy.label}
-            value={economy[policy.field]}
-            min={policy.min}
-            max={policy.max}
-            step={policy.step}
-            prefix={policy.prefix}
-            suffix={policy.suffix}
-            onChange={(value) =>
-              onPolicyChange(policy.field, value)
-            }
-          />
-        ))}
-      </Stack>
-    </Paper>
-  );
 }
 
 interface PolicySliderProps {
   label: string;
   value: number;
-  min: number;
-  max: number;
-  step?: number;
-  prefix?: string;
-  suffix?: string;
+  minimum: number;
+  maximum: number;
+  step: number;
+  suffix: string;
   onChange: (value: number) => void;
 }
 
 function PolicySlider({
   label,
   value,
-  min,
-  max,
-  step = 1,
-  prefix = "",
-  suffix = "",
+  minimum,
+  maximum,
+  step,
+  suffix,
   onChange,
 }: PolicySliderProps) {
-  function formatValue(numberValue: number) {
-    const formattedNumber =
-      numberValue.toLocaleString("en-US", {
-        maximumFractionDigits:
-          step < 1 ? 2 : 0,
-      });
-
-    return `${prefix}${formattedNumber}${suffix}`;
-  }
+  const handleChange = (
+    _event: Event,
+    newValue: number | number[],
+  ) => {
+    if (typeof newValue === "number") {
+      onChange(newValue);
+    }
+  };
 
   return (
     <Box>
-      <Typography
-        variant="h6"
-        component="div"
-        gutterBottom
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 1,
+        }}
       >
-        {label}: {formatValue(value)}
-      </Typography>
+        <Typography
+          sx={{
+            fontWeight: 600,
+          }}
+        >
+          {label}
+        </Typography>
+
+        <Typography
+          sx={{
+            color: "primary.main",
+            fontWeight: 700,
+          }}
+        >
+          {value.toFixed(1)}
+          {suffix}
+        </Typography>
+      </Box>
 
       <Slider
         value={value}
-        min={min}
-        max={max}
+        min={minimum}
+        max={maximum}
         step={step}
+        onChange={handleChange}
         valueLabelDisplay="auto"
-        valueLabelFormat={formatValue}
-        aria-label={label}
-        onChange={(_, newValue) => {
-          if (typeof newValue === "number") {
-            onChange(newValue);
-          }
-        }}
+        valueLabelFormat={(sliderValue) =>
+          `${sliderValue}${suffix}`
+        }
       />
     </Box>
+  );
+}
+
+export default function PolicyPanel({
+  policies,
+  onPolicyChange,
+}: PolicyPanelProps) {
+  return (
+    <Paper
+      sx={{
+        p: 3,
+      }}
+    >
+      <Typography
+        variant="h5"
+        sx={{
+          fontWeight: 700,
+        }}
+      >
+        Economic Policy
+      </Typography>
+
+      <Typography
+        sx={{
+          color: "text.secondary",
+          mt: 0.5,
+        }}
+      >
+        These policy changes will take effect when you advance
+        to the next quarter.
+      </Typography>
+
+      <Divider
+        sx={{
+          my: 3,
+        }}
+      />
+
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            md: "repeat(2, 1fr)",
+          },
+          gap: 4,
+        }}
+      >
+        <Box>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              mb: 3,
+            }}
+          >
+            Fiscal and Monetary Policy
+          </Typography>
+
+          <Box
+            sx={{
+              display: "grid",
+              gap: 3,
+            }}
+          >
+            <PolicySlider
+              label="Income Tax"
+              value={policies.incomeTax}
+              minimum={0}
+              maximum={60}
+              step={1}
+              suffix="%"
+              onChange={(value) =>
+                onPolicyChange("incomeTax", value)
+              }
+            />
+
+            <PolicySlider
+              label="Central Bank Interest Rate"
+              value={policies.interestRate}
+              minimum={0}
+              maximum={20}
+              step={0.25}
+              suffix="%"
+              onChange={(value) =>
+                onPolicyChange("interestRate", value)
+              }
+            />
+          </Box>
+        </Box>
+
+        <Box>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              mb: 3,
+            }}
+          >
+            Government Spending
+          </Typography>
+
+          <Box
+            sx={{
+              display: "grid",
+              gap: 3,
+            }}
+          >
+            <PolicySlider
+              label="Education"
+              value={policies.educationSpending}
+              minimum={0}
+              maximum={100}
+              step={1}
+              suffix=""
+              onChange={(value) =>
+                onPolicyChange("educationSpending", value)
+              }
+            />
+
+            <PolicySlider
+              label="Healthcare"
+              value={policies.healthcareSpending}
+              minimum={0}
+              maximum={100}
+              step={1}
+              suffix=""
+              onChange={(value) =>
+                onPolicyChange("healthcareSpending", value)
+              }
+            />
+
+            <PolicySlider
+              label="Infrastructure"
+              value={policies.infrastructureSpending}
+              minimum={0}
+              maximum={100}
+              step={1}
+              suffix=""
+              onChange={(value) =>
+                onPolicyChange(
+                  "infrastructureSpending",
+                  value,
+                )
+              }
+            />
+
+            <PolicySlider
+              label="Defense"
+              value={policies.defenseSpending}
+              minimum={0}
+              maximum={100}
+              step={1}
+              suffix=""
+              onChange={(value) =>
+                onPolicyChange("defenseSpending", value)
+              }
+            />
+
+            <PolicySlider
+              label="Science and Research"
+              value={policies.scienceSpending}
+              minimum={0}
+              maximum={100}
+              step={1}
+              suffix=""
+              onChange={(value) =>
+                onPolicyChange("scienceSpending", value)
+              }
+            />
+          </Box>
+        </Box>
+      </Box>
+    </Paper>
   );
 }
