@@ -77,7 +77,6 @@ export function advanceQuarter(
       },
     ],
   };
-  
-console.log("Economic history:", nextState.history);
+
   return nextState;
 }

@@ -20,6 +20,7 @@ import StatCard from "./components/StatCard";
 import { createDefaultGameState } from "./data/initialCountries";
 import { advanceQuarter } from "./engine/advanceQuarter";
 import type { GameState } from "./models/GameState";
+import HistoryChart from "./components/charts/HistoryChart";
 
 const theme = createTheme({
   palette: {
@@ -233,6 +234,13 @@ function App() {
     {money(gameState.economy.imports)} ) ={" "}
     {money(gameState.economy.gdp)}
   </Typography>
+</Paper>
+<Paper sx={{ p: 3 }}>
+  <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+    GDP History
+  </Typography>
+
+    <HistoryChart history={gameState.history} />
 </Paper>
         <Box
   sx={{
