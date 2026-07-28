@@ -48,5 +48,6 @@ export function createDefaultGameState(): GameState {
       electionYear: 4,
       currentYear: 1,
     },
+    history: [],
   };
 }

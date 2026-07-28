@@ -6,41 +6,46 @@ const round = (value: number): number =>
 export function runTreasury(
   state: GameState,
 ): GameState {
-  const taxableIncomeShare = 0.65;
+  const gdp = Math.max(state.economy.gdp, 0);
+
+  const incomeTaxRate =
+    state.treasury.incomeTax / 100;
+
+  const taxableShareOfGDP = 0.65;
 
   const revenue =
-    state.economy.gdp *
-    taxableIncomeShare *
-    (state.treasury.incomeTax / 100);
+    gdp *
+    taxableShareOfGDP *
+    incomeTaxRate;
 
   const programExpenses =
-    state.treasury.educationSpending +
-    state.treasury.healthcareSpending +
-    state.treasury.defenseSpending +
-    state.treasury.infrastructureSpending +
-    state.treasury.scienceSpending;
+    state.economy.governmentSpending;
 
   const quarterlyInterestRate =
     state.economy.interestRate / 100 / 4;
 
   const interestPayments =
-    state.treasury.debt * quarterlyInterestRate;
+    state.treasury.debt *
+    quarterlyInterestRate;
 
   const expenses =
-    programExpenses + interestPayments;
+    programExpenses +
+    interestPayments;
 
   const budgetBalance =
-    revenue - expenses;
+    revenue -
+    expenses;
 
   const debt =
     Math.max(
       0,
-      state.treasury.debt - budgetBalance,
+      state.treasury.debt -
+        budgetBalance,
     );
 
   const debtToGdp =
-    state.economy.gdp > 0
-      ? (debt / state.economy.gdp) * 100
+    gdp > 0
+      ? (debt / gdp) * 100
       : 0;
 
   return {
@@ -51,8 +56,12 @@ export function runTreasury(
 
       revenue: round(revenue),
       expenses: round(expenses),
-      interestPayments: round(interestPayments),
-      budgetBalance: round(budgetBalance),
+      interestPayments:
+        round(interestPayments),
+
+      budgetBalance:
+        round(budgetBalance),
+
       debt: round(debt),
       debtToGdp: round(debtToGdp),
     },

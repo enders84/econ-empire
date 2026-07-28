@@ -18,11 +18,10 @@ export function advanceQuarter(
     economyState,
   );
 
-  const unemployment =
-    calculateUnemployment(
-      previousState,
-      economyState,
-    );
+  const unemployment = calculateUnemployment(
+    previousState,
+    economyState,
+  );
 
   const stateWithLaborAndPrices: GameState = {
     ...economyState,
@@ -53,7 +52,7 @@ export function advanceQuarter(
       ? previousState.politics.currentYear + 1
       : previousState.politics.currentYear;
 
-  return {
+  const nextState: GameState = {
     ...politicsState,
 
     quarter: nextQuarter,
@@ -62,5 +61,23 @@ export function advanceQuarter(
       ...politicsState.politics,
       currentYear: nextYear,
     },
+
+    history: [
+      ...previousState.history,
+      {
+        quarter: previousState.quarter,
+        gdp: politicsState.economy.gdp,
+        potentialGdp: politicsState.economy.potentialGdp,
+        inflation: politicsState.economy.inflation,
+        unemployment: politicsState.economy.unemployment,
+        debt: politicsState.treasury.debt,
+        debtToGdp: politicsState.treasury.debtToGdp,
+        budgetBalance: politicsState.treasury.budgetBalance,
+        approval: politicsState.politics.approval,
+      },
+    ],
   };
+  
+console.log("Economic history:", nextState.history);
+  return nextState;
 }
