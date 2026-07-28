@@ -21,6 +21,7 @@ import { createDefaultGameState } from "./data/initialCountries";
 import { advanceQuarter } from "./engine/advanceQuarter";
 import type { GameState } from "./models/GameState";
 import HistoryChart from "./components/charts/HistoryChart";
+import type { ChartType } from "./models/ChartType";
 
 const theme = createTheme({
   palette: {
@@ -73,7 +74,8 @@ function App() {
       [policy]: value,
     }));
   };
-
+  const [selectedChart, setSelectedChart] =
+  useState<ChartType>("gdp");
   const handleNextQuarter = () => {
     setGameState((current) => {
       const stateWithPolicies: GameState = {
@@ -195,7 +197,7 @@ function App() {
     },
     gap: 2,
   }}
->
+>History
   <StatCard
     title="Consumption"
     value={money(gameState.economy.consumption)}
@@ -237,10 +239,81 @@ function App() {
 </Paper>
 <Paper sx={{ p: 3 }}>
   <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-    GDP History
+    Economic History
   </Typography>
 
-    <HistoryChart history={gameState.history} />
+  <Stack
+    direction="row"
+    spacing={1}
+    sx={{
+      mb: 2,
+      flexWrap: "wrap",
+      rowGap: 1,
+    }}
+  >
+    <Button
+      variant={selectedChart === "gdp" ? "contained" : "outlined"}
+      onClick={() => setSelectedChart("gdp")}
+    >
+      GDP
+    </Button>
+
+    <Button
+      variant={
+        selectedChart === "inflation"
+          ? "contained"
+          : "outlined"
+      }
+      onClick={() => setSelectedChart("inflation")}
+    >
+      Inflation
+    </Button>
+
+    <Button
+      variant={
+        selectedChart === "unemployment"
+          ? "contained"
+          : "outlined"
+      }
+      onClick={() => setSelectedChart("unemployment")}
+    >
+      Unemployment
+    </Button>
+
+    <Button
+      variant={selectedChart === "debt" ? "contained" : "outlined"}
+      onClick={() => setSelectedChart("debt")}
+    >
+      Debt
+    </Button>
+
+    <Button
+      variant={
+        selectedChart === "budget"
+          ? "contained"
+          : "outlined"
+      }
+      onClick={() => setSelectedChart("budget")}
+    >
+      Budget
+    </Button>
+
+    <Button
+      variant={
+        selectedChart === "approval"
+          ? "contained"
+          : "outlined"
+      }
+      onClick={() => setSelectedChart("approval")}
+    >
+      Approval
+    </Button>
+  </Stack>
+
+  <HistoryChart
+    history={gameState.history}
+    chartType={selectedChart}
+  />
 </Paper>
         <Box
   sx={{

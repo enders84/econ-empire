@@ -8,22 +8,71 @@ import {
 } from "recharts";
 
 import type { HistoryPoint } from "../../models/History";
+import type { ChartType } from "../../models/ChartType";
 
 interface HistoryChartProps {
   history: HistoryPoint[];
+  chartType: ChartType;
 }
 
-const money = (value: number): string =>
+interface ChartSettings {
+  dataKey:
+    | "gdp"
+    | "inflation"
+    | "unemployment"
+    | "debt"
+    | "budgetBalance"
+    | "approval";
+  name: string;
+  isMoney: boolean;
+}
+
+const chartSettings: Record<
+  Exclude<ChartType, "gdp">,
+  ChartSettings
+> = {
+  inflation: {
+    dataKey: "inflation",
+    name: "Inflation",
+    isMoney: false,
+  },
+  unemployment: {
+    dataKey: "unemployment",
+    name: "Unemployment",
+    isMoney: false,
+  },
+  debt: {
+    dataKey: "debt",
+    name: "National Debt",
+    isMoney: true,
+  },
+  budget: {
+    dataKey: "budgetBalance",
+    name: "Budget Balance",
+    isMoney: true,
+  },
+  approval: {
+    dataKey: "approval",
+    name: "Approval Rating",
+    isMoney: false,
+  },
+};
+
+const formatMoney = (value: number): string =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
   }).format(value);
 
+const formatPercent = (value: number): string =>
+  `${value.toFixed(1)}%`;
+
 function CustomTooltip({
   active,
   payload,
   label,
+  isMoney,
 }: {
   active?: boolean;
   payload?: Array<{
@@ -31,6 +80,7 @@ function CustomTooltip({
     value?: number | string;
   }>;
   label?: number | string;
+  isMoney: boolean;
 }) {
   if (!active || !payload || payload.length === 0) {
     return null;
@@ -56,9 +106,9 @@ function CustomTooltip({
         return (
           <div key={entry.name}>
             {entry.name}:{" "}
-            {Number.isFinite(numericValue)
-              ? money(numericValue)
-              : entry.value}
+            {isMoney
+              ? formatMoney(numericValue)
+              : formatPercent(numericValue)}
           </div>
         );
       })}
@@ -68,7 +118,18 @@ function CustomTooltip({
 
 export default function HistoryChart({
   history,
+  chartType,
 }: HistoryChartProps) {
+  const isGdpChart = chartType === "gdp";
+
+ const settings =
+  chartType !== "gdp"
+    ? chartSettings[chartType]
+    : undefined;
+
+  const isMoney =
+    isGdpChart || settings?.isMoney === true;
+
   return (
     <div style={{ width: "100%", height: 350 }}>
       <ResponsiveContainer width="100%" height="100%">
@@ -77,30 +138,49 @@ export default function HistoryChart({
 
           <YAxis
             tickFormatter={(value: number) =>
-              `$${value.toLocaleString()}`
+              isMoney
+                ? formatMoney(value)
+                : formatPercent(value)
             }
           />
 
-          <Tooltip content={<CustomTooltip />} />
-
-          <Line
-            type="monotone"
-            dataKey="gdp"
-            name="GDP"
-            stroke="#4caf50"
-            strokeWidth={3}
-            dot={false}
+          <Tooltip
+            content={
+              <CustomTooltip isMoney={isMoney} />
+            }
           />
 
-          <Line
-            type="monotone"
-            dataKey="potentialGdp"
-            name="Potential GDP"
-            stroke="#9e9e9e"
-            strokeWidth={2}
-            strokeDasharray="5 5"
-            dot={false}
-          />
+          {isGdpChart ? (
+            <>
+              <Line
+                type="monotone"
+                dataKey="gdp"
+                name="GDP"
+                stroke="#4caf50"
+                strokeWidth={3}
+                dot={false}
+              />
+
+              <Line
+                type="monotone"
+                dataKey="potentialGdp"
+                name="Potential GDP"
+                stroke="#9e9e9e"
+                strokeWidth={2}
+                strokeDasharray="5 5"
+                dot={false}
+              />
+            </>
+          ) : settings ? (
+  <Line
+    type="monotone"
+    dataKey={settings.dataKey}
+    name={settings.name}
+    stroke="#6ea8fe"
+    strokeWidth={3}
+    dot={false}
+  />
+) : null}
         </LineChart>
       </ResponsiveContainer>
     </div>
