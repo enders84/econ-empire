@@ -1,14 +1,5 @@
 import type { HistoryPoint } from "./History";
 
-export interface GameState {
-  quarter: number;
-
-  economy: EconomyState;
-  treasury: TreasuryState;
-  politics: PoliticsState;
-
-  history: HistoryPoint[];
-}
 export interface EconomyState {
   gdp: number;
   potentialGdp: number;
@@ -46,18 +37,14 @@ export interface TreasuryState {
 
 export interface PoliticalState {
   approval: number;
-
   electionYear: number;
   currentYear: number;
 }
 
 export interface GameState {
   quarter: number;
-
   economy: EconomyState;
-
   treasury: TreasuryState;
-
   politics: PoliticalState;
+  history: HistoryPoint[];
 }
-
