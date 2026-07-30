@@ -48,3 +48,5 @@ export interface GameState {
   politics: PoliticalState;
   history: HistoryPoint[];
 }
+
+export type { HistoryPoint } from "./History";

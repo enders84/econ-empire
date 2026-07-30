@@ -7,12 +7,15 @@ import {
   CssBaseline,
   Paper,
   Stack,
+  Tab,
+  Tabs,
   ThemeProvider,
   Toolbar,
   Typography,
   createTheme,
 } from "@mui/material";
 
+import HistoryChart from "./components/HistoryChart";
 import PolicyPanel, {
   type PolicyDraft,
 } from "./components/PolicyPanel";
@@ -20,8 +23,6 @@ import StatCard from "./components/StatCard";
 import { createDefaultGameState } from "./data/initialCountries";
 import { advanceQuarter } from "./engine/advanceQuarter";
 import type { GameState } from "./models/GameState";
-import HistoryChart from "./components/charts/HistoryChart";
-import type { ChartType } from "./models/ChartType";
 
 const theme = createTheme({
   palette: {
@@ -54,7 +55,9 @@ const money = (value: number): string =>
     currency: "USD",
     maximumFractionDigits: 2,
   }).format(value);
-const percent = (value: number) => `${value.toFixed(1)}%`;
+
+const percent = (value: number): string =>
+  `${value.toFixed(1)}%`;
 
 function App() {
   const [gameState, setGameState] = useState<GameState>(() =>
@@ -65,6 +68,8 @@ function App() {
     createPolicies(createDefaultGameState()),
   );
 
+  const [chartTab, setChartTab] = useState(0);
+
   const handlePolicyChange = (
     policy: keyof PolicyDraft,
     value: number,
@@ -74,32 +79,34 @@ function App() {
       [policy]: value,
     }));
   };
-  const [selectedChart, setSelectedChart] =
-  useState<ChartType>("gdp");
+
   const handleNextQuarter = () => {
     setGameState((current) => {
       const stateWithPolicies: GameState = {
         ...current,
+
         economy: {
           ...current.economy,
           interestRate: policies.interestRate,
         },
+
         treasury: {
           ...current.treasury,
           incomeTax: policies.incomeTax,
           educationSpending: policies.educationSpending,
           healthcareSpending: policies.healthcareSpending,
           defenseSpending: policies.defenseSpending,
-          infrastructureSpending: policies.infrastructureSpending,
+          infrastructureSpending:
+            policies.infrastructureSpending,
           scienceSpending: policies.scienceSpending,
         },
       };
 
-          return advanceQuarter(stateWithPolicies);
+      return advanceQuarter(stateWithPolicies);
     });
   };
+
   return (
-    
     <ThemeProvider theme={theme}>
       <CssBaseline />
 
@@ -115,14 +122,22 @@ function App() {
             </Typography>
           </Box>
 
-          <Typography variant="h6">
-            Quarter {gameState.quarter}
-          </Typography>
+          <Box sx={{ textAlign: "right" }}>
+            <Typography variant="h6">
+              Year {gameState.politics.currentYear}, Quarter{" "}
+              {gameState.quarter}
+            </Typography>
+
+            <Typography variant="body2">
+              Approval: {percent(gameState.politics.approval)}
+            </Typography>
+          </Box>
         </Toolbar>
       </AppBar>
 
       <Container maxWidth="xl" sx={{ py: 4 }}>
         <Stack spacing={3}>
+          {/* Main economic indicators */}
           <Box
             sx={{
               display: "grid",
@@ -155,197 +170,215 @@ function App() {
             />
           </Box>
 
+          {/* Government indicators */}
           <Box
-  sx={{
-    display: "grid",
-    gridTemplateColumns: {
-      xs: "1fr",
-      sm: "repeat(2, 1fr)",
-      md: "repeat(4, 1fr)",
-    },
-    gap: 2,
-  }}
->
-  <StatCard
-    title="National Debt"
-    value={money(gameState.treasury.debt)}
-  />
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "repeat(2, 1fr)",
+                md: "repeat(4, 1fr)",
+              },
+              gap: 2,
+            }}
+          >
+            <StatCard
+              title="National Debt"
+              value={money(gameState.treasury.debt)}
+            />
 
-  <StatCard
-    title="Debt-to-GDP"
-    value={percent(gameState.treasury.debtToGdp)}
-  />
+            <StatCard
+              title="Debt-to-GDP"
+              value={percent(gameState.treasury.debtToGdp)}
+            />
 
-  <StatCard
-    title="Budget Balance"
-    value={money(gameState.treasury.budgetBalance)}
-  />
+            <StatCard
+              title="Budget Balance"
+              value={money(gameState.treasury.budgetBalance)}
+            />
 
-  <StatCard
-    title="Approval Rating"
-    value={percent(gameState.politics.approval)}
-  />
-</Box>
+            <StatCard
+              title="Approval Rating"
+              value={percent(gameState.politics.approval)}
+            />
+          </Box>
 
-<Box
-  sx={{
-    display: "grid",
-    gridTemplateColumns: {
-      xs: "1fr",
-      sm: "repeat(2, 1fr)",
-      md: "repeat(5, 1fr)",
-    },
-    gap: 2,
-  }}
->History
-  <StatCard
-    title="Consumption"
-    value={money(gameState.economy.consumption)}
-  />
+          {/* GDP components */}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "repeat(2, 1fr)",
+                md: "repeat(5, 1fr)",
+              },
+              gap: 2,
+            }}
+          >
+            <StatCard
+              title="Consumption"
+              value={money(gameState.economy.consumption)}
+            />
 
-  <StatCard
-    title="Investment"
-    value={money(gameState.economy.investment)}
-  />
+            <StatCard
+              title="Investment"
+              value={money(gameState.economy.investment)}
+            />
 
-  <StatCard
-    title="Government"
-    value={money(gameState.economy.governmentSpending)}
-  />
+            <StatCard
+              title="Government"
+              value={money(
+                gameState.economy.governmentSpending,
+              )}
+            />
 
-  <StatCard
-    title="Exports"
-    value={money(gameState.economy.exports)}
-  />
+            <StatCard
+              title="Exports"
+              value={money(gameState.economy.exports)}
+            />
 
-  <StatCard
-    title="Imports"
-    value={money(gameState.economy.imports)}
-  />
-</Box>
-      <Paper sx={{ p: 2 }}>
-  <Typography variant="body1" sx={{ fontWeight: 700 }}>
-    GDP Check
-  </Typography>
+            <StatCard
+              title="Imports"
+              value={money(gameState.economy.imports)}
+            />
+          </Box>
 
-  <Typography sx={{ color: "text.secondary" }}>
-    {money(gameState.economy.consumption)} +{" "}
-    {money(gameState.economy.investment)} +{" "}
-    {money(gameState.economy.governmentSpending)} + ({" "}
-    {money(gameState.economy.exports)} −{" "}
-    {money(gameState.economy.imports)} ) ={" "}
-    {money(gameState.economy.gdp)}
-  </Typography>
-</Paper>
-<Paper sx={{ p: 3 }}>
-  <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-    Economic History
-  </Typography>
+          {/* GDP formula */}
+          <Paper sx={{ p: 2 }}>
+            <Typography
+              variant="body1"
+              sx={{ fontWeight: 700 }}
+            >
+              GDP Check
+            </Typography>
 
-  <Stack
-    direction="row"
-    spacing={1}
-    sx={{
-      mb: 2,
-      flexWrap: "wrap",
-      rowGap: 1,
-    }}
-  >
-    <Button
-      variant={selectedChart === "gdp" ? "contained" : "outlined"}
-      onClick={() => setSelectedChart("gdp")}
-    >
-      GDP
-    </Button>
+            <Typography sx={{ color: "text.secondary" }}>
+              {money(gameState.economy.consumption)} +{" "}
+              {money(gameState.economy.investment)} +{" "}
+              {money(gameState.economy.governmentSpending)} + ({" "}
+              {money(gameState.economy.exports)} −{" "}
+              {money(gameState.economy.imports)} ) ={" "}
+              {money(gameState.economy.gdp)}
+            </Typography>
+          </Paper>
 
-    <Button
-      variant={
-        selectedChart === "inflation"
-          ? "contained"
-          : "outlined"
-      }
-      onClick={() => setSelectedChart("inflation")}
-    >
-      Inflation
-    </Button>
+          {/* Treasury details */}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "repeat(2, 1fr)",
+                md: "repeat(4, 1fr)",
+              },
+              gap: 2,
+            }}
+          >
+            <StatCard
+              title="Tax Revenue"
+              value={money(gameState.treasury.revenue)}
+            />
 
-    <Button
-      variant={
-        selectedChart === "unemployment"
-          ? "contained"
-          : "outlined"
-      }
-      onClick={() => setSelectedChart("unemployment")}
-    >
-      Unemployment
-    </Button>
+            <StatCard
+              title="Total Expenses"
+              value={money(gameState.treasury.expenses)}
+            />
 
-    <Button
-      variant={selectedChart === "debt" ? "contained" : "outlined"}
-      onClick={() => setSelectedChart("debt")}
-    >
-      Debt
-    </Button>
+            <StatCard
+              title="Interest Payments"
+              value={money(
+                gameState.treasury.interestPayments,
+              )}
+            />
 
-    <Button
-      variant={
-        selectedChart === "budget"
-          ? "contained"
-          : "outlined"
-      }
-      onClick={() => setSelectedChart("budget")}
-    >
-      Budget
-    </Button>
+            <StatCard
+              title="Program Spending"
+              value={money(
+                gameState.economy.governmentSpending,
+              )}
+            />
+          </Box>
 
-    <Button
-      variant={
-        selectedChart === "approval"
-          ? "contained"
-          : "outlined"
-      }
-      onClick={() => setSelectedChart("approval")}
-    >
-      Approval
-    </Button>
-  </Stack>
+          {/* Tabbed charts */}
+          <Paper sx={{ overflow: "hidden" }}>
+            <Tabs
+              value={chartTab}
+              onChange={(_, newValue: number) =>
+                setChartTab(newValue)
+              }
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{
+                borderBottom: 1,
+                borderColor: "divider",
+                px: 2,
+              }}
+            >
+              <Tab label="Economy" />
+              <Tab label="Labor" />
+              <Tab label="Treasury" />
+              <Tab label="Politics" />
+            </Tabs>
 
-  <HistoryChart
-    history={gameState.history}
-    chartType={selectedChart}
-  />
-</Paper>
-        <Box
-  sx={{
-    display: "grid",
-    gridTemplateColumns: {
-      xs: "1fr",
-      sm: "repeat(2, 1fr)",
-      md: "repeat(4, 1fr)",
-    },
-    gap: 2,
-  }}
->
-  <StatCard
-    title="Tax Revenue"
-    value={money(gameState.treasury.revenue)}
-  />
+            <Box sx={{ p: 3 }}>
+              {chartTab === 0 && (
+                <HistoryChart
+                  title="GDP Over Time"
+                  data={gameState.history}
+                  lines={[
+                    {
+                      dataKey: "gdp",
+                      label: "GDP",
+                    },
+                  ]}
+                />
+              )}
 
-  <StatCard
-    title="Total Expenses"
-    value={money(gameState.treasury.expenses)}
-  />
+              {chartTab === 1 && (
+                <HistoryChart
+                  title="Inflation and Unemployment"
+                  data={gameState.history}
+                  lines={[
+                    {
+                      dataKey: "inflation",
+                      label: "Inflation",
+                    },
+                    {
+                      dataKey: "unemployment",
+                      label: "Unemployment",
+                    },
+                  ]}
+                />
+              )}
 
-  <StatCard
-    title="Interest Payments"
-    value={money(gameState.treasury.interestPayments)}
-  />
+              {chartTab === 2 && (
+                <HistoryChart
+                  title="National Debt"
+                  data={gameState.history}
+                  lines={[
+                    {
+                      dataKey: "debt",
+                      label: "Debt",
+                    },
+                  ]}
+                />
+              )}
 
-  <StatCard
-    title="Program Spending"
-    value={money(gameState.economy.governmentSpending)}
-  />
-</Box>
+              {chartTab === 3 && (
+                <HistoryChart
+                  title="Approval Rating"
+                  data={gameState.history}
+                  lines={[
+                    {
+                      dataKey: "approval",
+                      label: "Approval",
+                    },
+                  ]}
+                />
+              )}
+            </Box>
+          </Paper>
+
           <PolicyPanel
             policies={policies}
             onPolicyChange={handlePolicyChange}
@@ -364,12 +397,16 @@ function App() {
               }}
             >
               <Box>
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 700 }}
+                >
                   Advance the Simulation
                 </Typography>
 
                 <Typography sx={{ color: "text.secondary" }}>
-                  Apply the selected policies and simulate the next quarter.
+                  Apply the selected policies and simulate the
+                  next quarter.
                 </Typography>
               </Box>
 

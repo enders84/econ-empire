@@ -8,22 +8,22 @@ export function createDefaultGameState(): GameState {
     quarter: 1,
 
     economy: {
-  gdp: initialGDP,
-  potentialGdp: initialGDP,
-  outputGap: 0,
+      gdp: initialGDP,
+      potentialGdp: initialGDP,
+      outputGap: 0,
 
-  productivity: 1,
+      productivity: 1,
 
-  consumption: 650,
-  investment: 250,
-  governmentSpending: 200,
-  exports: 150,
-  imports: 50,
+      consumption: 650,
+      investment: 250,
+      governmentSpending: 200,
+      exports: 150,
+      imports: 50,
 
-  inflation: 2,
-  unemployment: 5,
-  interestRate: 3,
-},
+      inflation: 2,
+      unemployment: 5,
+      interestRate: 3,
+    },
 
     treasury: {
       revenue: 0,
@@ -48,6 +48,18 @@ export function createDefaultGameState(): GameState {
       electionYear: 4,
       currentYear: 1,
     },
-    history: [],
+
+    history: [
+      {
+        year: 1,
+        quarter: 1,
+        gdp: initialGDP,
+        inflation: 2,
+        unemployment: 5,
+        debt: initialDebt,
+        debtToGdp: (initialDebt / initialGDP) * 100,
+        approval: 50,
+      },
+    ],
   };
 }

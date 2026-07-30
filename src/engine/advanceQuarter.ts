@@ -1,47 +1,11 @@
 import type { GameState } from "../models/GameState";
 import { runEconomy } from "./economy/economy";
-import { calculateInflation } from "./economy/calculateInflation";
-import { calculateUnemployment } from "./economy/calculateUnemployment";
-import { runTreasury } from "./treasury/treasury";
 import { runPolitics } from "./politics/politics";
-
-const round = (value: number): number =>
-  Math.round(value * 100) / 100;
+import { runTreasury } from "./treasury/treasury";
 
 export function advanceQuarter(
   previousState: GameState,
 ): GameState {
-  const economyState = runEconomy(previousState);
-
-  const inflation = calculateInflation(
-    previousState,
-    economyState,
-  );
-
-  const unemployment = calculateUnemployment(
-    previousState,
-    economyState,
-  );
-
-  const stateWithLaborAndPrices: GameState = {
-    ...economyState,
-
-    economy: {
-      ...economyState.economy,
-      inflation: round(inflation),
-      unemployment: round(unemployment),
-    },
-  };
-
-  const treasuryState = runTreasury(
-    stateWithLaborAndPrices,
-  );
-
-  const politicsState = runPolitics(
-    previousState,
-    treasuryState,
-  );
-
   const nextQuarter =
     previousState.quarter >= 4
       ? 1
@@ -52,7 +16,16 @@ export function advanceQuarter(
       ? previousState.politics.currentYear + 1
       : previousState.politics.currentYear;
 
-  const nextState: GameState = {
+  const economyState = runEconomy(previousState);
+
+  const treasuryState = runTreasury(economyState);
+
+  const politicsState = runPolitics(
+    previousState,
+    treasuryState,
+  );
+
+  const updatedState: GameState = {
     ...politicsState,
 
     quarter: nextQuarter,
@@ -65,18 +38,23 @@ export function advanceQuarter(
     history: [
       ...previousState.history,
       {
-        quarter: previousState.quarter,
+        year: nextYear,
+        quarter: nextQuarter,
+
         gdp: politicsState.economy.gdp,
-        potentialGdp: politicsState.economy.potentialGdp,
         inflation: politicsState.economy.inflation,
-        unemployment: politicsState.economy.unemployment,
+        unemployment:
+          politicsState.economy.unemployment,
+
         debt: politicsState.treasury.debt,
-        debtToGdp: politicsState.treasury.debtToGdp,
-        budgetBalance: politicsState.treasury.budgetBalance,
-        approval: politicsState.politics.approval,
+        debtToGdp:
+          politicsState.treasury.debtToGdp,
+
+        approval:
+          politicsState.politics.approval,
       },
     ],
   };
 
-  return nextState;
+  return updatedState;
 }
