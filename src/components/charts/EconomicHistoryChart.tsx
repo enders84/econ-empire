@@ -10,7 +10,7 @@ import {
 import type { HistoryPoint } from "../../models/History";
 import type { ChartType } from "../../models/ChartType";
 
-interface HistoryChartProps {
+interface EconomicHistoryChartProps {
   history: HistoryPoint[];
   chartType: ChartType;
 }
@@ -116,10 +116,10 @@ function CustomTooltip({
   );
 }
 
-export default function HistoryChart({
+export default function EconomicHistoryChart({
   history,
   chartType,
-}: HistoryChartProps) {
+}: EconomicHistoryChartProps) {
   const isGdpChart = chartType === "gdp";
 
  const settings =
