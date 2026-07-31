@@ -1,3 +1,4 @@
+import Dashboard from "./components/dashboard/Dashboard";
 import { useState } from "react";
 import {
   AppBar,
@@ -137,71 +138,7 @@ function App() {
 
       <Container maxWidth="xl" sx={{ py: 4 }}>
         <Stack spacing={3}>
-          {/* Main economic indicators */}
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                sm: "repeat(2, 1fr)",
-                md: "repeat(4, 1fr)",
-              },
-              gap: 2,
-            }}
-          >
-            <StatCard
-              title="GDP"
-              value={money(gameState.economy.gdp)}
-            />
-
-            <StatCard
-              title="Inflation"
-              value={percent(gameState.economy.inflation)}
-            />
-
-            <StatCard
-              title="Unemployment"
-              value={percent(gameState.economy.unemployment)}
-            />
-
-            <StatCard
-              title="Interest Rate"
-              value={percent(gameState.economy.interestRate)}
-            />
-          </Box>
-
-          {/* Government indicators */}
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                sm: "repeat(2, 1fr)",
-                md: "repeat(4, 1fr)",
-              },
-              gap: 2,
-            }}
-          >
-            <StatCard
-              title="National Debt"
-              value={money(gameState.treasury.debt)}
-            />
-
-            <StatCard
-              title="Debt-to-GDP"
-              value={percent(gameState.treasury.debtToGdp)}
-            />
-
-            <StatCard
-              title="Budget Balance"
-              value={money(gameState.treasury.budgetBalance)}
-            />
-
-            <StatCard
-              title="Approval Rating"
-              value={percent(gameState.politics.approval)}
-            />
-          </Box>
+          <Dashboard gameState={gameState} />
 
           {/* GDP components */}
           <Box
