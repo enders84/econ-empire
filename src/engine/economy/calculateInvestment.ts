@@ -12,13 +12,15 @@ const round = (value: number): number =>
 export function calculateInvestment(
   state: GameState,
 ): number {
-  const {
-    gdp,
-    investment: previousInvestment,
-    inflation,
-    unemployment,
-    interestRate,
-  } = state.economy;
+const {
+  gdp,
+  investment: previousInvestment,
+  inflation,
+  unemployment,
+} = state.economy;
+
+const interestRate =
+  state.policy.policyInterestRate;
 
   const normalInvestmentShare = 0.2;
 

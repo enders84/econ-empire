@@ -22,7 +22,7 @@ export function runTreasury(
     state.economy.governmentSpending;
 
   const quarterlyInterestRate =
-    state.economy.interestRate / 100 / 4;
+    state.policy.policyInterestRate / 100 / 4;
 
   const interestPayments =
     state.treasury.debt *
