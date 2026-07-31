@@ -48,7 +48,17 @@ export function createDefaultGameState(): GameState {
       electionYear: 4,
       currentYear: 1,
     },
+    policy: {
+  incomeTaxRate: 25,
 
+  educationBudget: 50,
+  healthcareBudget: 50,
+  infrastructureBudget: 50,
+  scienceBudget: 50,
+  defenseBudget: 50,
+
+  policyInterestRate: 3,
+},
     history: [
       {
         year: 1,
