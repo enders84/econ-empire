@@ -13,41 +13,36 @@ export function calculateUnemployment(
   previousState: GameState,
   updatedState: GameState,
 ): number {
-  const previousGDP = Math.max(
-    previousState.economy.gdp,
-    1,
-  );
-
-  const currentGDP =
-    updatedState.economy.gdp;
-
   const previousUnemployment =
     previousState.economy.unemployment;
 
-  const gdpGrowth =
-    ((currentGDP - previousGDP) /
-      previousGDP) *
-    100;
+  const outputGap =
+    updatedState.economy.outputGap;
 
-  // Okun-style relationship:
-  // falling GDP raises unemployment,
-  // growing GDP lowers unemployment.
-  const growthEffect =
-    gdpGrowth * -0.04;
+  const interestRate =
+    updatedState.policy.policyInterestRate;
+
+  // Okun's Law:
+  // Positive output gap lowers unemployment.
+  // Negative output gap raises unemployment.
+  const outputGapEffect =
+    outputGap * -0.08;
+
+  // Higher interest rates slightly weaken hiring.
+  const neutralInterestRate = 3;
 
   const interestRateEffect =
     Math.max(
       0,
-      updatedState.economy.interestRate - 4,
-    ) * 0.02;
+      interestRate - neutralInterestRate,
+    ) * 0.03;
 
   const targetUnemployment =
     previousUnemployment +
-    growthEffect +
+    outputGapEffect +
     interestRateEffect;
 
-  // Unemployment changes gradually rather than
-  // jumping immediately after one weak quarter.
+  // Labor markets adjust gradually.
   const adjustmentSpeed = 0.35;
 
   const unemployment =

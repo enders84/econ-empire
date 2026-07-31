@@ -13,39 +13,39 @@ export function calculateInflation(
   previousState: GameState,
   updatedState: GameState,
 ): number {
-  const previousGDP = Math.max(
-    previousState.economy.gdp,
-    1,
-  );
-
-  const currentGDP =
-    updatedState.economy.gdp;
-
   const previousInflation =
     previousState.economy.inflation;
 
-  const gdpGrowth =
-    ((currentGDP - previousGDP) /
-      previousGDP) *
-    100;
+  const outputGap =
+    updatedState.economy.outputGap;
 
   const interestRate =
-    updatedState.economy.interestRate;
+    updatedState.policy.policyInterestRate;
+
+  const currentGDP = Math.max(
+    updatedState.economy.gdp,
+    1,
+  );
 
   const governmentShare =
     updatedState.economy.governmentSpending /
-    Math.max(currentGDP, 1);
+    currentGDP;
 
-  // Inflation responds gradually to demand.
+  // A positive output gap creates inflationary
+  // pressure; a negative gap reduces inflation.
   const demandPressure =
-    gdpGrowth * 0.04;
+    outputGap * 0.06;
 
   const spendingPressure =
     Math.max(0, governmentShare - 0.20) *
     1.5;
 
+  // Rates above the neutral rate reduce inflation.
+  const neutralInterestRate = 2.5;
+
   const monetaryPressure =
-    (2.5 - interestRate) * 0.08;
+    (neutralInterestRate - interestRate) *
+    0.08;
 
   const targetInflation =
     previousInflation +
@@ -53,14 +53,13 @@ export function calculateInflation(
     spendingPressure +
     monetaryPressure;
 
-  // Inflation has inertia—it only moves partway
-  // toward the target each quarter.
+  // Inflation adjusts gradually because prices
+  // and expectations are persistent.
   const adjustmentSpeed = 0.20;
 
   const inflation =
     previousInflation +
-    (targetInflation -
-      previousInflation) *
+    (targetInflation - previousInflation) *
       adjustmentSpeed;
 
   return round(
