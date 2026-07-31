@@ -9,7 +9,7 @@ export function runTreasury(
   const gdp = Math.max(state.economy.gdp, 0);
 
   const incomeTaxRate =
-    state.treasury.incomeTax / 100;
+    state.policy.incomeTaxRate / 100;
 
   const taxableShareOfGDP = 0.65;
 
