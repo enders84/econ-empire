@@ -7,7 +7,7 @@ const clamp = (
 ): number => Math.min(Math.max(value, minimum), maximum);
 
 const round = (value: number): number =>
-  Math.round(value * 100) / 100;
+  Math.round(value * 10000) / 10000;
 
 export function calculateUnemployment(
   previousState: GameState,
@@ -22,27 +22,24 @@ export function calculateUnemployment(
   const interestRate =
     updatedState.policy.policyInterestRate;
 
-  // Okun's Law:
-  // Positive output gap lowers unemployment.
-  // Negative output gap raises unemployment.
+  // Positive output gaps increase hiring.
+  // Negative output gaps increase unemployment.
   const outputGapEffect =
     outputGap * -0.08;
 
-  // Higher interest rates slightly weaken hiring.
   const neutralInterestRate = 3;
 
+  // Rates above neutral raise unemployment;
+  // rates below neutral support employment.
   const interestRateEffect =
-    Math.max(
-      0,
-      interestRate - neutralInterestRate,
-    ) * 0.03;
+    (interestRate - neutralInterestRate) * 0.03;
 
   const targetUnemployment =
     previousUnemployment +
     outputGapEffect +
     interestRateEffect;
 
-  // Labor markets adjust gradually.
+  // Labor-market changes occur gradually.
   const adjustmentSpeed = 0.35;
 
   const unemployment =

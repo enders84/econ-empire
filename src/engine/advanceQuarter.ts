@@ -1,9 +1,14 @@
 import type { GameState } from "../models/GameState";
 import { runEconomy } from "./economy/economy";
+import { calculateInflation } from "./economy/calculateInflation";
+import { calculateUnemployment } from "./economy/calculateUnemployment";
 import { applyEvent } from "./events/applyEvent";
 import { selectRandomEvent } from "./events/selectRandomEvent";
 import { runPolitics } from "./politics/politics";
 import { runTreasury } from "./treasury/treasury";
+
+const round = (value: number): number =>
+  Math.round(value * 100) / 100;
 
 export function advanceQuarter(
   previousState: GameState,
@@ -18,9 +23,37 @@ export function advanceQuarter(
       ? previousState.politics.currentYear + 1
       : previousState.politics.currentYear;
 
+  // Calculate GDP, potential GDP, productivity,
+  // output gap, and GDP components.
   const economyState = runEconomy(previousState);
 
-  const treasuryState = runTreasury(economyState);
+  // Calculate inflation and unemployment from
+  // the newly updated economic conditions.
+  const inflation = calculateInflation(
+    previousState,
+    economyState,
+  );
+
+  const unemployment = calculateUnemployment(
+    previousState,
+    economyState,
+  );
+
+  const stateWithLaborAndPrices: GameState = {
+    ...economyState,
+
+    economy: {
+      ...economyState.economy,
+      inflation: round(inflation),
+      unemployment: round(unemployment),
+      interestRate:
+        economyState.policy.policyInterestRate,
+    },
+  };
+
+  const treasuryState = runTreasury(
+    stateWithLaborAndPrices,
+  );
 
   const politicsState = runPolitics(
     previousState,

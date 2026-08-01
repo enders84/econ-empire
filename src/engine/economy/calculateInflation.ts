@@ -7,7 +7,7 @@ const clamp = (
 ): number => Math.min(Math.max(value, minimum), maximum);
 
 const round = (value: number): number =>
-  Math.round(value * 100) / 100;
+  Math.round(value * 10000) / 10000;
 
 export function calculateInflation(
   previousState: GameState,
@@ -31,18 +31,21 @@ export function calculateInflation(
     updatedState.economy.governmentSpending /
     currentGDP;
 
-  // A positive output gap creates inflationary
-  // pressure; a negative gap reduces inflation.
+  // GDP above potential creates upward price pressure.
+  // GDP below potential creates downward price pressure.
   const demandPressure =
     outputGap * 0.06;
 
+  // Government spending above 20% of GDP adds
+  // extra inflationary pressure.
   const spendingPressure =
     Math.max(0, governmentShare - 0.20) *
     1.5;
 
-  // Rates above the neutral rate reduce inflation.
   const neutralInterestRate = 2.5;
 
+  // Rates below neutral raise inflation pressure.
+  // Rates above neutral reduce inflation pressure.
   const monetaryPressure =
     (neutralInterestRate - interestRate) *
     0.08;
@@ -53,8 +56,8 @@ export function calculateInflation(
     spendingPressure +
     monetaryPressure;
 
-  // Inflation adjusts gradually because prices
-  // and expectations are persistent.
+  // Inflation changes gradually because prices
+  // and expectations have inertia.
   const adjustmentSpeed = 0.20;
 
   const inflation =

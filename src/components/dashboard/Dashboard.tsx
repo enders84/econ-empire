@@ -53,7 +53,7 @@ export default function Dashboard({
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <StatusCard
           title="Inflation"
-          value={`${gameState.economy.inflation.toFixed(1)}%`}
+          value={`${gameState.economy.inflation.toFixed(2)}%`}
           status={inflationStatus}
           description="Annual Inflation"
         />
@@ -62,7 +62,7 @@ export default function Dashboard({
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <StatusCard
           title="Unemployment"
-          value={`${gameState.economy.unemployment.toFixed(1)}%`}
+          value={`${gameState.economy.unemployment.toFixed(2)}%`}
           status={unemploymentStatus}
           description="Labor Market"
         />
