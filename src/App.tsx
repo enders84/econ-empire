@@ -24,6 +24,9 @@ import StatCard from "./components/StatCard";
 import { createDefaultGameState } from "./data/initialCountries";
 import { advanceQuarter } from "./engine/advanceQuarter";
 import type { GameState } from "./models/GameState";
+import QuarterlyReportDialog from "./components/reports/QuarterlyReportDialog";
+import { generateQuarterlyReport } from "./engine/reports/generateQuarterlyReport";
+import type { QuarterlyReport } from "./models/QuarterlyReport";
 
 const theme = createTheme({
   palette: {
@@ -80,31 +83,56 @@ function App() {
       [policy]: value,
     }));
   };
+const [quarterlyReport, setQuarterlyReport] =
+  useState<QuarterlyReport | null>(null);
+
+const [reportOpen, setReportOpen] =
+  useState(false);
 
   const handleNextQuarter = () => {
-    setGameState((current) => {
-      const stateWithPolicies: GameState = {
-        ...current,
+  const stateWithPolicies: GameState = {
+    ...gameState,
 
-        economy: {
-          ...current.economy,
-          interestRate: policies.interestRate,
-        },
+    policy: {
+      incomeTaxRate: policies.incomeTax,
 
-        treasury: {
-          ...current.treasury,
-          incomeTax: policies.incomeTax,
-          educationSpending: policies.educationSpending,
-          healthcareSpending: policies.healthcareSpending,
-          defenseSpending: policies.defenseSpending,
-          infrastructureSpending:
-            policies.infrastructureSpending,
-          scienceSpending: policies.scienceSpending,
-        },
-      };
+      educationBudget: policies.educationSpending,
+      healthcareBudget: policies.healthcareSpending,
+      defenseBudget: policies.defenseSpending,
+      infrastructureBudget:
+        policies.infrastructureSpending,
+      scienceBudget: policies.scienceSpending,
 
-      return advanceQuarter(stateWithPolicies);
-    });
+      policyInterestRate: policies.interestRate,
+    },
+
+    economy: {
+      ...gameState.economy,
+      interestRate: policies.interestRate,
+    },
+
+    treasury: {
+      ...gameState.treasury,
+      incomeTax: policies.incomeTax,
+      educationSpending: policies.educationSpending,
+      healthcareSpending: policies.healthcareSpending,
+      defenseSpending: policies.defenseSpending,
+      infrastructureSpending:
+        policies.infrastructureSpending,
+      scienceSpending: policies.scienceSpending,
+    },
+  };
+
+  const nextState = advanceQuarter(stateWithPolicies);
+
+  const report = generateQuarterlyReport(
+    gameState,
+    nextState,
+  );
+
+  setGameState(nextState);
+  setQuarterlyReport(report);
+  setReportOpen(true);
   };
 
   return (
@@ -357,7 +385,13 @@ function App() {
             </Stack>
           </Paper>
         </Stack>
-      </Container>
+            </Container>
+
+      <QuarterlyReportDialog
+        open={reportOpen}
+        report={quarterlyReport}
+        onClose={() => setReportOpen(false)}
+      />
     </ThemeProvider>
   );
 }
