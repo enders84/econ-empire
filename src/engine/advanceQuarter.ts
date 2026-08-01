@@ -1,5 +1,7 @@
 import type { GameState } from "../models/GameState";
 import { runEconomy } from "./economy/economy";
+import { applyEvent } from "./events/applyEvent";
+import { selectRandomEvent } from "./events/selectRandomEvent";
 import { runPolitics } from "./politics/politics";
 import { runTreasury } from "./treasury/treasury";
 
@@ -25,13 +27,20 @@ export function advanceQuarter(
     treasuryState,
   );
 
+  const selectedEvent = selectRandomEvent();
+
+  const stateAfterEvent =
+    selectedEvent !== null
+      ? applyEvent(politicsState, selectedEvent)
+      : politicsState;
+
   const updatedState: GameState = {
-    ...politicsState,
+    ...stateAfterEvent,
 
     quarter: nextQuarter,
 
     politics: {
-      ...politicsState.politics,
+      ...stateAfterEvent.politics,
       currentYear: nextYear,
     },
 
@@ -41,17 +50,17 @@ export function advanceQuarter(
         year: nextYear,
         quarter: nextQuarter,
 
-        gdp: politicsState.economy.gdp,
-        inflation: politicsState.economy.inflation,
+        gdp: stateAfterEvent.economy.gdp,
+        inflation: stateAfterEvent.economy.inflation,
         unemployment:
-          politicsState.economy.unemployment,
+          stateAfterEvent.economy.unemployment,
 
-        debt: politicsState.treasury.debt,
+        debt: stateAfterEvent.treasury.debt,
         debtToGdp:
-          politicsState.treasury.debtToGdp,
+          stateAfterEvent.treasury.debtToGdp,
 
         approval:
-          politicsState.politics.approval,
+          stateAfterEvent.politics.approval,
       },
     ],
   };
