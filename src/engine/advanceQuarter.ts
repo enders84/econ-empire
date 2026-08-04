@@ -38,7 +38,23 @@ export function advanceQuarter(
     previousState,
     economyState,
   );
-
+  console.log("Output gap:", economyState.economy.outputGap);
+console.log(
+  "Policy interest rate:",
+  economyState.policy.policyInterestRate,
+);
+console.log(
+  "Inflation:",
+  previousState.economy.inflation,
+  "→",
+  inflation,
+);
+console.log(
+  "Unemployment:",
+  previousState.economy.unemployment,
+  "→",
+  unemployment,
+);
   const stateWithLaborAndPrices: GameState = {
     ...economyState,
 

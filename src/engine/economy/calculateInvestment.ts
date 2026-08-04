@@ -1,5 +1,5 @@
 import type { GameState } from "../../models/GameState";
-
+import { ECONOMY } from "../../config/economy";
 const clamp = (
   value: number,
   minimum: number,
@@ -53,7 +53,7 @@ const interestRate =
 
   // Investment moves gradually toward its target.
   // This prevents a falling-GDP feedback loop.
-  const adjustmentSpeed = 0.12;
+  const adjustmentSpeed = ECONOMY.INVESTMENT_ADJUSTMENT;
 
   const investment =
     previousInvestment +

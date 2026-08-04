@@ -1,3 +1,4 @@
+import { ECONOMY } from "../../config/economy";
 import type { GameState } from "../../models/GameState";
 
 const clamp = (
@@ -16,9 +17,6 @@ export function calculateInflation(
   const previousInflation =
     previousState.economy.inflation;
 
-  const outputGap =
-    updatedState.economy.outputGap;
-
   const interestRate =
     updatedState.policy.policyInterestRate;
 
@@ -31,41 +29,55 @@ export function calculateInflation(
     updatedState.economy.governmentSpending /
     currentGDP;
 
-  // GDP above potential creates upward price pressure.
-  // GDP below potential creates downward price pressure.
-  const demandPressure =
-    outputGap * 0.06;
+  const outputGap = clamp(
+    updatedState.economy.outputGap,
+    -10,
+    10,
+  );
 
-  // Government spending above 20% of GDP adds
-  // extra inflationary pressure.
-  const spendingPressure =
+  const inflationTarget = 2;
+
+  // GDP above potential raises the target inflation rate.
+  // GDP below potential lowers it.
+  const outputGapEffect =
+    outputGap * 0.15;
+
+  // Spending above 20% of GDP creates additional
+  // demand pressure.
+  const spendingEffect =
     Math.max(0, governmentShare - 0.20) *
-    1.5;
+    8;
 
-  const neutralInterestRate = 2.5;
+  // Rates above neutral reduce inflation;
+  // rates below neutral increase it.
+  const interestRateEffect =
+    (ECONOMY.NEUTRAL_INTEREST_RATE -
+      interestRate) *
+    0.20;
 
-  // Rates below neutral raise inflation pressure.
-  // Rates above neutral reduce inflation pressure.
-  const monetaryPressure =
-    (neutralInterestRate - interestRate) *
-    0.08;
+  const targetInflation = clamp(
+    inflationTarget +
+      outputGapEffect +
+      spendingEffect +
+      interestRateEffect,
+    ECONOMY.MIN_INFLATION,
+    ECONOMY.MAX_INFLATION,
+  );
 
-  const targetInflation =
-    previousInflation +
-    demandPressure +
-    spendingPressure +
-    monetaryPressure;
-
-  // Inflation changes gradually because prices
-  // and expectations have inertia.
-  const adjustmentSpeed = 0.20;
+  const adjustmentSpeed =
+    ECONOMY.INFLATION_ADJUSTMENT;
 
   const inflation =
     previousInflation +
-    (targetInflation - previousInflation) *
+    (targetInflation -
+      previousInflation) *
       adjustmentSpeed;
 
   return round(
-    clamp(inflation, -2, 15),
+    clamp(
+      inflation,
+      ECONOMY.MIN_INFLATION,
+      ECONOMY.MAX_INFLATION,
+    ),
   );
 }

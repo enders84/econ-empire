@@ -1,12 +1,23 @@
+import { ECONOMY } from "../../config/economy";
 import type { GameState } from "../../models/GameState";
-import { calculateConsumption } from "./calculateConsumption";
-import { calculateInvestment } from "./calculateInvestment";
-import { calculateGovernment } from "./calculateGovernment";
-import { calculateTrade } from "./calculateTrade";
-import { calculateGDP } from "./calculateGDP";
 
-const round = (value: number): number =>
-  Math.round(value * 100) / 100;
+import { calculateConsumption } from "./calculateConsumption";
+import { calculateGDP } from "./calculateGDP";
+import { calculateGovernment } from "./calculateGovernment";
+import { calculateInvestment } from "./calculateInvestment";
+import { calculateTrade } from "./calculateTrade";
+
+const round = (
+  value: number,
+  decimalPlaces = 2,
+): number => {
+  const multiplier = 10 ** decimalPlaces;
+
+  return (
+    Math.round(value * multiplier) /
+    multiplier
+  );
+};
 
 export function runEconomy(
   state: GameState,
@@ -17,39 +28,40 @@ export function runEconomy(
     infrastructureBudget,
   } = state.policy;
 
-  const baseProductivityGrowth = 0.001;
-
-  const educationGrowthBonus =
-    educationBudget * 0.000002;
-
-  const scienceGrowthBonus =
-    scienceBudget * 0.000003;
-
   const productivityGrowthRate =
-    baseProductivityGrowth +
-    educationGrowthBonus +
-    scienceGrowthBonus;
+    ECONOMY.BASE_PRODUCTIVITY_GROWTH +
+    educationBudget *
+      ECONOMY.EDUCATION_PRODUCTIVITY_MULTIPLIER +
+    scienceBudget *
+      ECONOMY.SCIENCE_PRODUCTIVITY_MULTIPLIER;
 
   const productivity =
     state.economy.productivity *
     (1 + productivityGrowthRate);
 
   const infrastructureGrowthRate =
-    infrastructureBudget * 0.000002;
+    infrastructureBudget *
+    ECONOMY.INFRASTRUCTURE_POTENTIAL_GDP_MULTIPLIER;
+
+  const potentialGdpGrowthRate =
+    productivityGrowthRate +
+    infrastructureGrowthRate;
 
   const potentialGdp =
     state.economy.potentialGdp *
-    (1 +
-      productivityGrowthRate +
-      infrastructureGrowthRate);
+    (1 + potentialGdpGrowthRate);
 
   const stateWithGrowth: GameState = {
     ...state,
 
     economy: {
       ...state.economy,
-      productivity: round(productivity),
-      potentialGdp: round(potentialGdp),
+
+      // Preserve extra precision so small quarterly
+      // productivity gains are not rounded away.
+      productivity: round(productivity, 4),
+
+      potentialGdp: round(potentialGdp, 2),
     },
   };
 
@@ -83,7 +95,9 @@ export function runEconomy(
 
   const outputGap =
     potentialGdp > 0
-      ? ((gdp - potentialGdp) / potentialGdp) * 100
+      ? ((gdp - potentialGdp) /
+          potentialGdp) *
+        100
       : 0;
 
   return {
@@ -92,7 +106,7 @@ export function runEconomy(
     economy: {
       ...stateWithComponents.economy,
       gdp,
-      outputGap: round(outputGap),
+      outputGap: round(outputGap, 2),
     },
   };
 }

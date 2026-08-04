@@ -1,3 +1,4 @@
+import { ECONOMY } from "../../config/economy";
 import type { GameState } from "../../models/GameState";
 
 const round = (value: number): number =>
@@ -6,46 +7,71 @@ const round = (value: number): number =>
 export function runTreasury(
   state: GameState,
 ): GameState {
-  const gdp = Math.max(state.economy.gdp, 0);
+  const annualizedGDP = Math.max(
+    state.economy.gdp,
+    0,
+  );
 
   const incomeTaxRate =
     state.policy.incomeTaxRate / 100;
 
-  const taxableShareOfGDP = 0.65;
+  const taxableShareOfGDP =
+    ECONOMY.TAXABLE_SHARE_OF_GDP;
 
-  const revenue =
-    gdp *
+  /*
+   * GDP is displayed as an annualized economic level,
+   * but each simulation turn represents one quarter.
+   * Convert annual revenue into a quarterly flow.
+   */
+  const annualRevenue =
+    annualizedGDP *
     taxableShareOfGDP *
     incomeTaxRate;
 
-  const programExpenses =
+  const quarterlyRevenue =
+    annualRevenue / 4;
+
+  /*
+   * Government spending is also treated as an
+   * annual budget, so only one quarter of it should
+   * be charged during each turn.
+   */
+  const annualProgramExpenses =
     state.economy.governmentSpending;
 
+  const quarterlyProgramExpenses =
+    annualProgramExpenses / 4;
+
   const quarterlyInterestRate =
-    state.policy.policyInterestRate / 100 / 4;
+    state.policy.policyInterestRate /
+    100 /
+    4;
 
   const interestPayments =
     state.treasury.debt *
     quarterlyInterestRate;
 
-  const expenses =
-    programExpenses +
+  const quarterlyExpenses =
+    quarterlyProgramExpenses +
     interestPayments;
 
   const budgetBalance =
-    revenue -
-    expenses;
+    quarterlyRevenue -
+    quarterlyExpenses;
 
-  const debt =
-    Math.max(
-      0,
-      state.treasury.debt -
-        budgetBalance,
-    );
+  /*
+   * A deficit is negative, so subtracting it adds
+   * to debt. A surplus is positive and reduces debt.
+   */
+  const debt = Math.max(
+    0,
+    state.treasury.debt -
+      budgetBalance,
+  );
 
   const debtToGdp =
-    gdp > 0
-      ? (debt / gdp) * 100
+    annualizedGDP > 0
+      ? (debt / annualizedGDP) * 100
       : 0;
 
   return {
@@ -54,8 +80,8 @@ export function runTreasury(
     treasury: {
       ...state.treasury,
 
-      revenue: round(revenue),
-      expenses: round(expenses),
+      revenue: round(quarterlyRevenue),
+      expenses: round(quarterlyExpenses),
       interestPayments:
         round(interestPayments),
 

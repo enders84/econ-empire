@@ -1,3 +1,4 @@
+import { ECONOMY } from "../../config/economy";
 import type { GameState } from "../../models/GameState";
 
 const clamp = (
@@ -16,31 +17,41 @@ export function calculateUnemployment(
   const previousUnemployment =
     previousState.economy.unemployment;
 
-  const outputGap =
-    updatedState.economy.outputGap;
-
   const interestRate =
     updatedState.policy.policyInterestRate;
 
-  // Positive output gaps increase hiring.
-  // Negative output gaps increase unemployment.
+  // Prevent an extreme output gap from immediately
+  // driving unemployment to its maximum.
+  const outputGap = clamp(
+    updatedState.economy.outputGap,
+    -10,
+    10,
+  );
+
+  const naturalUnemploymentRate = 5;
+
+  // GDP above potential lowers the target rate.
+  // GDP below potential raises the target rate.
   const outputGapEffect =
-    outputGap * -0.08;
+    outputGap * -0.25;
 
-  const neutralInterestRate = 3;
-
-  // Rates above neutral raise unemployment;
+  // Rates above neutral weaken employment;
   // rates below neutral support employment.
   const interestRateEffect =
-    (interestRate - neutralInterestRate) * 0.03;
+    (interestRate -
+      ECONOMY.NEUTRAL_LABOR_RATE) *
+    0.10;
 
-  const targetUnemployment =
-    previousUnemployment +
-    outputGapEffect +
-    interestRateEffect;
+  const targetUnemployment = clamp(
+    naturalUnemploymentRate +
+      outputGapEffect +
+      interestRateEffect,
+    ECONOMY.MIN_UNEMPLOYMENT,
+    ECONOMY.MAX_UNEMPLOYMENT,
+  );
 
-  // Labor-market changes occur gradually.
-  const adjustmentSpeed = 0.35;
+  const adjustmentSpeed =
+    ECONOMY.UNEMPLOYMENT_ADJUSTMENT;
 
   const unemployment =
     previousUnemployment +
@@ -49,6 +60,10 @@ export function calculateUnemployment(
       adjustmentSpeed;
 
   return round(
-    clamp(unemployment, 2, 25),
+    clamp(
+      unemployment,
+      ECONOMY.MIN_UNEMPLOYMENT,
+      ECONOMY.MAX_UNEMPLOYMENT,
+    ),
   );
 }

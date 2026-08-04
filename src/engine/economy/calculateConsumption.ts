@@ -1,3 +1,4 @@
+import { ECONOMY } from "../../config/economy";
 import type { GameState } from "../../models/GameState";
 
 const clamp = (
@@ -17,35 +18,52 @@ export function calculateConsumption(
     consumption: previousConsumption,
     unemployment,
     inflation,
-    interestRate,
   } = state.economy;
 
-  const { incomeTax } = state.treasury;
+  const taxRate = clamp(
+    state.policy.incomeTaxRate / 100,
+    0,
+    1,
+  );
 
-  const taxRate = clamp(incomeTax / 100, 0, 1);
+  const interestRate =
+    state.policy.policyInterestRate;
+
+  // Not all GDP becomes household income.
+  const householdIncomeShare = 0.78;
+
+  const grossHouseholdIncome =
+    gdp * householdIncomeShare;
 
   const disposableIncome =
-    gdp * (1 - taxRate);
+    grossHouseholdIncome * (1 - taxRate);
 
+  // Higher unemployment lowers household income
+  // and consumer confidence.
   const unemploymentEffect = clamp(
-    1 - unemployment * 0.01,
-    0.7,
-    1,
+    1 - Math.max(0, unemployment - 4) * 0.025,
+    0.65,
+    1.05,
   );
 
+  // Inflation above target reduces purchasing power.
+  // Mildly low inflation is not penalized.
   const inflationEffect = clamp(
-    1 - Math.max(0, inflation - 2) * 0.008,
-    0.8,
-    1,
+    1 - Math.max(0, inflation - 2) * 0.015,
+    0.75,
+    1.02,
   );
 
+  // Higher rates encourage saving and make credit
+  // purchases more expensive. Lower rates provide
+  // a modest spending boost.
   const interestRateEffect = clamp(
-    1 - Math.max(0, interestRate - 2) * 0.006,
-    0.85,
-    1,
+    1 - (interestRate - 2.5) * 0.012,
+    0.80,
+    1.08,
   );
 
-  const marginalPropensityToConsume = 0.78;
+  const marginalPropensityToConsume = 0.82;
 
   const targetConsumption =
     disposableIncome *
@@ -54,14 +72,15 @@ export function calculateConsumption(
     inflationEffect *
     interestRateEffect;
 
-  // Consumption only moves part of the way toward its target each quarter.
-  // This prevents GDP and consumption from collapsing in a feedback loop.
-  const adjustmentSpeed = 0.15;
+  const adjustmentSpeed =
+    ECONOMY.CONSUMPTION_ADJUSTMENT;
 
   const consumption =
     previousConsumption +
     (targetConsumption - previousConsumption) *
       adjustmentSpeed;
 
-  return round(Math.max(0, consumption));
+  return round(
+    Math.max(0, consumption),
+  );
 }
