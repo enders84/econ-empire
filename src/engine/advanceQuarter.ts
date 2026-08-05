@@ -6,7 +6,7 @@ import { applyEvent } from "./events/applyEvent";
 import { selectRandomEvent } from "./events/selectRandomEvent";
 import { runPolitics } from "./politics/politics";
 import { runTreasury } from "./treasury/treasury";
-
+import { calculateBusinessCycle } from "./economy/calculateBusinessCycle";
 const round = (value: number): number =>
   Math.round(value * 100) / 100;
 
@@ -75,7 +75,11 @@ console.log(
     previousState,
     treasuryState,
   );
-
+  const businessCycle =
+  calculateBusinessCycle(
+    previousState,
+    politicsState,
+  );
   const selectedEvent = selectRandomEvent();
 
   const stateAfterEvent =
@@ -88,6 +92,10 @@ console.log(
 
     quarter: nextQuarter,
 
+     economy: {
+    ...stateAfterEvent.economy,
+    businessCycle,
+  },
     politics: {
       ...stateAfterEvent.politics,
       currentYear: nextYear,

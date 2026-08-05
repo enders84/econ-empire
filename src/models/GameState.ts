@@ -15,6 +15,14 @@ export interface EconomyState {
   inflation: number;
   unemployment: number;
   interestRate: number;
+
+  businessCycle:
+  | "Expansion"
+  | "Boom"
+  | "Slowdown"
+  | "Recession"
+  | "Recovery";
+
 }
 
 export interface TreasuryState {

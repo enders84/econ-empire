@@ -11,7 +11,7 @@ export function createDefaultGameState(): GameState {
       gdp: initialGDP,
       potentialGdp: initialGDP,
       outputGap: 0,
-
+      businessCycle: "Expansion",
       productivity: 1,
 
       consumption: 650,
@@ -58,6 +58,7 @@ export function createDefaultGameState(): GameState {
   defenseBudget: 50,
 
   policyInterestRate: 3,
+  
 },
     history: [
       {

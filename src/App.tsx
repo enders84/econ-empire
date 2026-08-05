@@ -27,7 +27,7 @@ import type { GameState } from "./models/GameState";
 import QuarterlyReportDialog from "./components/reports/QuarterlyReportDialog";
 import { generateQuarterlyReport } from "./engine/reports/generateQuarterlyReport";
 import type { QuarterlyReport } from "./models/QuarterlyReport";
-
+import DeveloperPanel from "./components/debug/DeveloperPanel";
 const theme = createTheme({
   palette: {
     mode: "dark",
@@ -167,7 +167,7 @@ const [reportOpen, setReportOpen] =
       <Container maxWidth="xl" sx={{ py: 4 }}>
         <Stack spacing={3}>
           <Dashboard gameState={gameState} />
-
+          <DeveloperPanel gameState={gameState} />
           {/* GDP components */}
           <Box
             sx={{
@@ -384,7 +384,7 @@ const [reportOpen, setReportOpen] =
               </Button>
             </Stack>
           </Paper>
-        </Stack>
+              </Stack>
             </Container>
 
       <QuarterlyReportDialog
