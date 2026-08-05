@@ -3,6 +3,10 @@ export interface HistoryPoint {
   quarter: number;
 
   gdp: number;
+  gdpGrowth: number;
+  potentialGdp: number;
+  outputGap: number;
+
   inflation: number;
   unemployment: number;
 

@@ -11,6 +11,30 @@ export default function Dashboard({
 }: DashboardProps) {
   const debtToGdp =
     gameState.treasury.debtToGdp;
+  const businessCycle =
+  gameState.economy.businessCycle;
+
+const businessCycleStatus =
+  businessCycle === "Expansion"
+    ? "good"
+    : businessCycle === "Recovery"
+      ? "good"
+      : businessCycle === "Slowdown"
+        ? "warning"
+        : businessCycle === "Boom"
+          ? "warning"
+          : "critical";
+
+const businessCycleIcon =
+  businessCycle === "Expansion"
+    ? "🟢"
+    : businessCycle === "Recovery"
+      ? "🔵"
+      : businessCycle === "Slowdown"
+        ? "🟡"
+        : businessCycle === "Boom"
+          ? "🔥"
+          : "🔴";
 
   const inflationStatus =
     gameState.economy.inflation <= 3
@@ -46,8 +70,9 @@ export default function Dashboard({
         <StatusCard
           title="GDP"
           value={`$${gameState.economy.gdp.toFixed(0)}B`}
-          description="Gross Domestic Product"
-        />
+          status={businessCycleStatus}
+          description={`${businessCycleIcon} ${businessCycle}`}
+          />
       </Grid>
 
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>

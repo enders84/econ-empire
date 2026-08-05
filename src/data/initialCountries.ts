@@ -60,17 +60,24 @@ export function createDefaultGameState(): GameState {
   policyInterestRate: 3,
   
 },
-    history: [
-      {
-        year: 1,
-        quarter: 1,
-        gdp: initialGDP,
-        inflation: 2,
-        unemployment: 5,
-        debt: initialDebt,
-        debtToGdp: (initialDebt / initialGDP) * 100,
-        approval: 50,
-      },
-    ],
+   history: [
+  {
+    year: 1,
+    quarter: 1,
+
+    gdp: initialGDP,
+    gdpGrowth: 0,
+    potentialGdp: initialGDP,
+    outputGap: 0,
+
+    inflation: 2,
+    unemployment: 5,
+
+    debt: initialDebt,
+    debtToGdp: (initialDebt / initialGDP) * 100,
+
+    approval: 50,
+  },
+],
   };
 }

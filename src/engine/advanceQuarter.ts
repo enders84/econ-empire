@@ -86,7 +86,15 @@ console.log(
     selectedEvent !== null
       ? applyEvent(politicsState, selectedEvent)
       : politicsState;
+  const previousGdp = Math.max(
+  previousState.economy.gdp,
+  1,
+);
 
+const gdpGrowth =
+  ((stateAfterEvent.economy.gdp - previousGdp) /
+    previousGdp) *
+  100;
   const updatedState: GameState = {
     ...stateAfterEvent,
 
@@ -103,22 +111,29 @@ console.log(
 
     history: [
       ...previousState.history,
-      {
-        year: nextYear,
-        quarter: nextQuarter,
+     {
+  year: nextYear,
+  quarter: nextQuarter,
 
-        gdp: stateAfterEvent.economy.gdp,
-        inflation: stateAfterEvent.economy.inflation,
-        unemployment:
-          stateAfterEvent.economy.unemployment,
+  gdp: stateAfterEvent.economy.gdp,
+  gdpGrowth: round(gdpGrowth),
+  potentialGdp:
+    stateAfterEvent.economy.potentialGdp,
+  outputGap:
+    stateAfterEvent.economy.outputGap,
 
-        debt: stateAfterEvent.treasury.debt,
-        debtToGdp:
-          stateAfterEvent.treasury.debtToGdp,
+  inflation:
+    stateAfterEvent.economy.inflation,
+  unemployment:
+    stateAfterEvent.economy.unemployment,
 
-        approval:
-          stateAfterEvent.politics.approval,
-      },
+  debt: stateAfterEvent.treasury.debt,
+  debtToGdp:
+    stateAfterEvent.treasury.debtToGdp,
+
+  approval:
+    stateAfterEvent.politics.approval,
+},
     ],
   };
 
