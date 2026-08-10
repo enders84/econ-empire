@@ -1,5 +1,7 @@
 import type { HistoryPoint } from "./History";
 import type { PolicyState } from "./PolicyState";
+import type { NewsItem } from "./NewsItem";
+
 export interface EconomyState {
   gdp: number;
   potentialGdp: number;
@@ -17,12 +19,11 @@ export interface EconomyState {
   interestRate: number;
 
   businessCycle:
-  | "Expansion"
-  | "Boom"
-  | "Slowdown"
-  | "Recession"
-  | "Recovery";
-
+    | "Expansion"
+    | "Boom"
+    | "Slowdown"
+    | "Recession"
+    | "Recovery";
 }
 
 export interface TreasuryState {
@@ -51,11 +52,17 @@ export interface PoliticalState {
 
 export interface GameState {
   quarter: number;
+
   economy: EconomyState;
   treasury: TreasuryState;
   politics: PoliticalState;
   policy: PolicyState;
+
   history: HistoryPoint[];
+  news: NewsItem[];
+
+  currentEventTitle?: string;
+  currentEventDescription?: string;
 }
 
 export type { HistoryPoint } from "./History";

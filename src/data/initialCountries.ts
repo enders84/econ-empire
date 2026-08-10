@@ -79,5 +79,6 @@ export function createDefaultGameState(): GameState {
     approval: 50,
   },
 ],
+news: [],
   };
 }

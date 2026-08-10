@@ -319,7 +319,53 @@ export default function QuarterlyReportDialog({
           />
         </Box>
 
-        <Divider sx={{ my: 3 }} />
+        {report.eventTitle && (
+  <>
+    <Divider sx={{ my: 3 }} />
+
+    <Paper
+      variant="outlined"
+      sx={{
+        p: 2.5,
+        backgroundColor: "background.default",
+      }}
+    >
+      <Typography
+        variant="overline"
+        sx={{
+          color: "primary.main",
+          fontWeight: 800,
+          letterSpacing: 1,
+        }}
+      >
+        Economic News
+      </Typography>
+
+      <Typography
+        variant="h6"
+        sx={{
+          mt: 0.5,
+          fontWeight: 800,
+        }}
+      >
+        {report.eventTitle}
+      </Typography>
+
+      {report.eventDescription && (
+        <Typography
+          sx={{
+            mt: 1,
+            color: "text.secondary",
+          }}
+        >
+          {report.eventDescription}
+        </Typography>
+      )}
+    </Paper>
+  </>
+)}
+
+<Divider sx={{ my: 3 }} />
 
         <Typography
           variant="h6"

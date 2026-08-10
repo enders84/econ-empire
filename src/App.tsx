@@ -284,6 +284,7 @@ const [reportOpen, setReportOpen] =
               <Tab label="Labor" />
               <Tab label="Treasury" />
               <Tab label="Politics" />
+              <Tab label="News" />
               </Tabs>
 
            <Box sx={{ p: 3 }}>
@@ -363,6 +364,75 @@ const [reportOpen, setReportOpen] =
       ]}
     />
   )}
+  {chartTab === 5 && (
+  <Box>
+    <Typography
+      variant="h6"
+      sx={{
+        fontWeight: 800,
+        mb: 2,
+      }}
+    >
+      Economic News
+    </Typography>
+
+    {gameState.news.length > 0 ? (
+      <Stack spacing={2}>
+        {[...gameState.news]
+          .reverse()
+          .map((item, index) => (
+            <Paper
+              key={`${item.year}-${item.quarter}-${index}`}
+              variant="outlined"
+              sx={{
+                p: 2,
+                backgroundColor:
+                  "background.default",
+              }}
+            >
+              <Typography
+                variant="overline"
+                sx={{
+                  color: "primary.main",
+                  fontWeight: 800,
+                }}
+              >
+                Year {item.year} • Quarter{" "}
+                {item.quarter}
+              </Typography>
+
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 800,
+                  mt: 0.5,
+                }}
+              >
+                {item.title}
+              </Typography>
+
+              <Typography
+                sx={{
+                  color: "text.secondary",
+                  mt: 1,
+                }}
+              >
+                {item.description}
+              </Typography>
+            </Paper>
+          ))}
+      </Stack>
+    ) : (
+      <Typography
+        sx={{
+          color: "text.secondary",
+        }}
+      >
+        No major economic events have occurred yet.
+      </Typography>
+    )}
+      </Box>
+    )}
 </Box>
 </Paper>
 
