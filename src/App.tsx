@@ -6,6 +6,10 @@ import {
   Button,
   Container,
   CssBaseline,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Paper,
   Stack,
   Tab,
@@ -64,15 +68,27 @@ const percent = (value: number): string =>
   `${value.toFixed(1)}%`;
 
 function App() {
-  const [gameState, setGameState] = useState<GameState>(() =>
+  const [gameState, setGameState] = useState(() =>
     createDefaultGameState(),
   );
 
-  const [policies, setPolicies] = useState<PolicyDraft>(() =>
+  const [policies, setPolicies] = useState(() =>
     createPolicies(createDefaultGameState()),
   );
 
+  const lostElection =
+    gameState.politics.lastElectionResult === "Lost";
+
+  const electionYear =
+    gameState.politics.lastElectionYear;
+
   const [chartTab, setChartTab] = useState(0);
+
+  const [quarterlyReport, setQuarterlyReport] =
+    useState<QuarterlyReport | null>(null);
+
+  const [reportOpen, setReportOpen] =
+    useState(false);
 
   const handlePolicyChange = (
     policy: keyof PolicyDraft,
@@ -83,58 +99,77 @@ function App() {
       [policy]: value,
     }));
   };
-const [quarterlyReport, setQuarterlyReport] =
-  useState<QuarterlyReport | null>(null);
 
-const [reportOpen, setReportOpen] =
-  useState(false);
+  const handleResetGame = () => {
+    const freshState = createDefaultGameState();
+
+    setGameState(freshState);
+    setPolicies(createPolicies(freshState));
+
+    setQuarterlyReport(null);
+    setReportOpen(false);
+
+    setChartTab(0);
+  };
 
   const handleNextQuarter = () => {
-  const stateWithPolicies: GameState = {
-    ...gameState,
+    const stateWithPolicies: GameState = {
+      ...gameState,
 
-    policy: {
-      incomeTaxRate: policies.incomeTax,
+      policy: {
+        incomeTaxRate: policies.incomeTax,
 
-      educationBudget: policies.educationSpending,
-      healthcareBudget: policies.healthcareSpending,
-      defenseBudget: policies.defenseSpending,
-      infrastructureBudget:
-        policies.infrastructureSpending,
-      scienceBudget: policies.scienceSpending,
+        educationBudget:
+          policies.educationSpending,
+        healthcareBudget:
+          policies.healthcareSpending,
+        defenseBudget:
+          policies.defenseSpending,
+        infrastructureBudget:
+          policies.infrastructureSpending,
+        scienceBudget:
+          policies.scienceSpending,
 
-      policyInterestRate: policies.interestRate,
-    },
+        policyInterestRate:
+          policies.interestRate,
+      },
 
-    economy: {
-      ...gameState.economy,
-      interestRate: policies.interestRate,
-    },
+      economy: {
+        ...gameState.economy,
+        interestRate:
+          policies.interestRate,
+      },
 
-    treasury: {
-      ...gameState.treasury,
-      incomeTax: policies.incomeTax,
-      educationSpending: policies.educationSpending,
-      healthcareSpending: policies.healthcareSpending,
-      defenseSpending: policies.defenseSpending,
-      infrastructureSpending:
-        policies.infrastructureSpending,
-      scienceSpending: policies.scienceSpending,
-    },
+      treasury: {
+        ...gameState.treasury,
+        incomeTax:
+          policies.incomeTax,
+        educationSpending:
+          policies.educationSpending,
+        healthcareSpending:
+          policies.healthcareSpending,
+        defenseSpending:
+          policies.defenseSpending,
+        infrastructureSpending:
+          policies.infrastructureSpending,
+        scienceSpending:
+          policies.scienceSpending,
+      },
+    };
+
+    const nextState =
+      advanceQuarter(stateWithPolicies);
+
+    const report =
+      generateQuarterlyReport(
+        gameState,
+        nextState,
+      );
+
+    setGameState(nextState);
+    setQuarterlyReport(report);
+    setReportOpen(true);
   };
-
-  const nextState = advanceQuarter(stateWithPolicies);
-
-  const report = generateQuarterlyReport(
-    gameState,
-    nextState,
-  );
-
-  setGameState(nextState);
-  setQuarterlyReport(report);
-  setReportOpen(true);
-  };
-
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -471,6 +506,7 @@ const [reportOpen, setReportOpen] =
                 variant="contained"
                 size="large"
                 onClick={handleNextQuarter}
+                disabled={lostElection}
               >
                 Advance Quarter
               </Button>
@@ -484,6 +520,47 @@ const [reportOpen, setReportOpen] =
         report={quarterlyReport}
         onClose={() => setReportOpen(false)}
       />
+      <Dialog
+  open={lostElection && !reportOpen}
+  maxWidth="sm"
+  fullWidth
+>
+  <DialogTitle>
+    Election Defeat
+  </DialogTitle>
+
+  <DialogContent>
+    <Typography
+      variant="h5"
+      sx={{
+        fontWeight: 800,
+        mb: 2,
+      }}
+    >
+      Your Government Has Lost Re-Election
+    </Typography>
+
+    <Typography sx={{ color: "text.secondary" }}>
+      Voters rejected the government in the Year{" "}
+      {electionYear} election. Your administration
+      has come to an end.
+    </Typography>
+  </DialogContent>
+
+  <DialogActions
+    sx={{
+      px: 3,
+      pb: 3,
+    }}
+  >
+    <Button
+      variant="contained"
+      onClick={handleResetGame}
+    >
+      Start New Game
+    </Button>
+  </DialogActions>
+</Dialog>
     </ThemeProvider>
   );
 }

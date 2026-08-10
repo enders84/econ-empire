@@ -48,6 +48,9 @@ export interface PoliticalState {
   approval: number;
   electionYear: number;
   currentYear: number;
+
+  lastElectionYear?: number;
+  lastElectionResult?: "Won" | "Lost";
 }
 
 export interface GameState {

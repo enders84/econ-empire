@@ -4,7 +4,8 @@ export type NewsCategory =
   | "Inflation"
   | "Labor"
   | "Debt"
-  | "BusinessCycle";
+  | "BusinessCycle"
+  | "Election";
 
 export interface NewsItem {
   year: number;

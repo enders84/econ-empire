@@ -7,7 +7,7 @@ import { calculateBusinessCycle } from "./economy/calculateBusinessCycle";
 import { generateEconomicNews } from "./news/generateEconomicNews";
 import { applyEvent } from "./events/applyEvent";
 import { selectRandomEvent } from "./events/selectRandomEvent";
-
+import { runElection } from "./politics/runElection";
 import { runPolitics } from "./politics/politics";
 import { runTreasury } from "./treasury/treasury";
 
@@ -166,11 +166,37 @@ const stateBeforeNews: GameState = {
   news: previousState.news,
 };
 
-// 9. Generate economic headlines from the
+// 9. Run an election if this is an election quarter.
+const stateAfterElection =
+  runElection(stateBeforeNews);
+  const electionNews =
+  stateAfterElection.politics.lastElectionYear ===
+    nextYear &&
+  stateAfterElection.politics.lastElectionResult
+    ? [
+        {
+          year: nextYear,
+          quarter: nextQuarter,
+          title:
+            stateAfterElection.politics
+              .lastElectionResult === "Won"
+              ? "Government Wins Re-Election"
+              : "Incumbent Defeated at the Polls",
+          description:
+            stateAfterElection.politics
+              .lastElectionResult === "Won"
+              ? "Voters returned the government to office after evaluating its economic performance and public approval."
+              : "Voters rejected the incumbent government after evaluating its economic performance and public approval.",
+          category: "Election" as const,
+        },
+      ]
+    : [];
+
+// 10. Generate economic headlines from the
 // completed quarter.
 const generatedNews = generateEconomicNews(
   previousState,
-  stateBeforeNews,
+  stateAfterElection,
 );
 
 const eventNews =
@@ -189,13 +215,14 @@ const eventNews =
 
 // 10. Save all news for the quarter.
 const updatedState: GameState = {
-  ...stateBeforeNews,
+  ...stateAfterElection,
 
   news: [
-    ...previousState.news,
-    ...eventNews,
-    ...generatedNews,
-  ],
+  ...previousState.news,
+  ...electionNews,
+  ...eventNews,
+  ...generatedNews,
+],
 };
 
 return updatedState;

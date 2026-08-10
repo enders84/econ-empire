@@ -44,10 +44,13 @@ export function createDefaultGameState(): GameState {
     },
 
     politics: {
-      approval: 50,
-      electionYear: 4,
-      currentYear: 1,
-    },
+  approval: 50,
+  electionYear: 4,
+  currentYear: 1,
+
+  lastElectionYear: undefined,
+  lastElectionResult: undefined,
+},
     policy: {
   incomeTaxRate: 30,
 
