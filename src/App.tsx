@@ -287,18 +287,38 @@ const [reportOpen, setReportOpen] =
 
             <Box sx={{ p: 3 }}>
               {chartTab === 0 && (
-                <HistoryChart
-                  title="GDP Over Time"
+              <Stack spacing={3}>
+               <HistoryChart
+                 title="GDP and Economic Capacity"
                   data={gameState.history}
                   lines={[
-                    {
-                      dataKey: "gdp",
-                      label: "GDP",
-                    },
-                  ]}
-                />
-              )}
+                   {
+                    dataKey: "gdp",
+                    label: "Actual GDP",
+                   },
+                   {
+                     dataKey: "potentialGdp",
+                     label: "Potential GDP",
+                   },
+                    ]}
+                    />
 
+                 <HistoryChart
+                  title="GDP Growth and Output Gap"
+                  data={gameState.history}
+                  lines={[
+                     {
+                       dataKey: "gdpGrowth",
+                       label: "GDP Growth",
+                     },
+                     {
+                       dataKey: "outputGap",
+                       label: "Output Gap",
+                     },
+                      ]}
+                         />
+                         </Stack>
+                      )}              
               {chartTab === 1 && (
                 <HistoryChart
                   title="Inflation and Unemployment"

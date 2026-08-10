@@ -9,12 +9,12 @@ export const eventPool: GameEvent[] = [
     description:
       "Global energy prices surged this quarter.",
 
-    probability: 0.10,
+    weight: 10,
 
     effects: {
-      inflation: 1,
-      gdp: -1,
-      approval: -2,
+      inflation: 0.5,
+      gdp: -0.6,
+      approval: -1,
     },
   },
 
@@ -26,11 +26,11 @@ export const eventPool: GameEvent[] = [
     description:
       "Businesses rapidly adopted new AI technologies.",
 
-    probability: 0.08,
+    weight: 8,
 
     effects: {
-      productivity: 0.03,
-      gdp: 1.5,
+      productivity: 0.005,
+      gdp: 0.8,
     },
   },
 
@@ -42,11 +42,11 @@ export const eventPool: GameEvent[] = [
     description:
       "Households increased spending.",
 
-    probability: 0.12,
+    weight: 12,
 
     effects: {
-      gdp: 0.8,
-      approval: 1,
+      gdp: 0.4,
+      approval: 0.5,
     },
   },
 ];

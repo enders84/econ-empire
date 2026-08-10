@@ -14,11 +14,11 @@ export function createDefaultGameState(): GameState {
       businessCycle: "Expansion",
       productivity: 1,
 
-      consumption: 650,
-      investment: 250,
+      consumption: 600,
+      investment: 200,
       governmentSpending: 200,
-      exports: 150,
-      imports: 50,
+      exports: 120,
+      imports: 120,
 
       inflation: 2,
       unemployment: 5,
@@ -34,13 +34,13 @@ export function createDefaultGameState(): GameState {
       debtToGdp: (initialDebt / initialGDP) * 100,
       interestPayments: 0,
 
-      incomeTax: 25,
+      incomeTax: 30,
 
-      educationSpending: 50,
-      healthcareSpending: 50,
-      defenseSpending: 50,
-      infrastructureSpending: 50,
-      scienceSpending: 50,
+      educationSpending: 40,
+      healthcareSpending: 40,
+      defenseSpending: 40,
+      infrastructureSpending: 40,
+      scienceSpending: 40,
     },
 
     politics: {
@@ -49,13 +49,13 @@ export function createDefaultGameState(): GameState {
       currentYear: 1,
     },
     policy: {
-  incomeTaxRate: 25,
+  incomeTaxRate: 30,
 
-  educationBudget: 50,
-  healthcareBudget: 50,
-  infrastructureBudget: 50,
-  scienceBudget: 50,
-  defenseBudget: 50,
+  educationBudget: 40,
+  healthcareBudget: 40,
+  infrastructureBudget: 40,
+  scienceBudget: 40,
+  defenseBudget: 40,
 
   policyInterestRate: 3,
   

@@ -5,7 +5,7 @@ export interface GameEvent {
 
   description: string;
 
-  probability: number;
+  weight: number;
 
   effects: {
     gdp?: number;

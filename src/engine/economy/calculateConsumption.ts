@@ -1,4 +1,3 @@
-import { ECONOMY } from "../../config/economy";
 import type { GameState } from "../../models/GameState";
 
 const clamp = (
@@ -14,70 +13,96 @@ export function calculateConsumption(
   state: GameState,
 ): number {
   const {
-    gdp,
+    potentialGdp,
     consumption: previousConsumption,
     unemployment,
     inflation,
   } = state.economy;
 
-  const taxRate = clamp(
-    state.policy.incomeTaxRate / 100,
-    0,
-    1,
-  );
+  const incomeTax =
+    state.policy.incomeTaxRate;
 
   const interestRate =
     state.policy.policyInterestRate;
 
-  // Not all GDP becomes household income.
-  const householdIncomeShare = 0.78;
-
-  const grossHouseholdIncome =
-    gdp * householdIncomeShare;
-
-  const disposableIncome =
-    grossHouseholdIncome * (1 - taxRate);
-
-  // Higher unemployment lowers household income
-  // and consumer confidence.
-  const unemploymentEffect = clamp(
-    1 - Math.max(0, unemployment - 4) * 0.025,
-    0.65,
-    1.05,
+  const taxRate = clamp(
+    incomeTax / 100,
+    0,
+    1,
   );
 
-  // Inflation above target reduces purchasing power.
-  // Mildly low inflation is not penalized.
-  const inflationEffect = clamp(
-    1 - Math.max(0, inflation - 2) * 0.015,
-    0.75,
+  /*
+   * LONG-RUN CONSUMPTION
+   *
+   * Consumption is anchored to potential GDP rather
+   * than current GDP. This prevents a temporary GDP
+   * decline from creating a permanent downward spiral.
+   */
+  const potentialDisposableIncome =
+    potentialGdp * (1 - taxRate);
+
+  const marginalPropensityToConsume = 0.80;
+
+  const baseConsumption =
+    potentialDisposableIncome *
+    marginalPropensityToConsume;
+
+  /*
+   * LABOR MARKET
+   *
+   * 5% unemployment is treated as approximately
+   * normal. Only unemployment above that level
+   * significantly reduces consumption.
+   */
+  const unemploymentEffect = clamp(
+    1 -
+      Math.max(0, unemployment - 5) *
+        0.012,
+    0.80,
     1.02,
   );
 
-  // Higher rates encourage saving and make credit
-  // purchases more expensive. Lower rates provide
-  // a modest spending boost.
-  const interestRateEffect = clamp(
-    1 - (interestRate - 2.5) * 0.012,
-    0.80,
-    1.08,
+  /*
+   * INFLATION
+   *
+   * 2% is approximately neutral.
+   */
+  const inflationEffect = clamp(
+    1 -
+      Math.max(0, inflation - 2) *
+        0.008,
+    0.85,
+    1,
   );
 
-  const marginalPropensityToConsume = 0.82;
+  /*
+   * INTEREST RATES
+   *
+   * 3% is our neutral policy rate.
+   */
+  const interestRateEffect = clamp(
+    1 -
+      Math.max(0, interestRate - 3) *
+        0.008,
+    0.85,
+    1,
+  );
 
   const targetConsumption =
-    disposableIncome *
-    marginalPropensityToConsume *
+    baseConsumption *
     unemploymentEffect *
     inflationEffect *
     interestRateEffect;
 
-  const adjustmentSpeed =
-    ECONOMY.CONSUMPTION_ADJUSTMENT;
+  /*
+   * Household spending adjusts gradually.
+   */
+  const adjustmentSpeed = 0.15;
 
   const consumption =
     previousConsumption +
-    (targetConsumption - previousConsumption) *
+    (targetConsumption -
+      previousConsumption) *
       adjustmentSpeed;
 
   return round(

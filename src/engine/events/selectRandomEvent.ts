@@ -4,13 +4,13 @@ import { eventPool } from "./eventPool";
 export function selectRandomEvent():
   | GameEvent
   | null {
-  // 20% chance that an event occurs.
+  // 20% chance that any event occurs this quarter.
   if (Math.random() > 0.20) {
     return null;
   }
 
   const totalWeight = eventPool.reduce(
-    (sum, event) => sum + event.probability,
+    (sum, event) => sum + event.weight,
     0,
   );
 
@@ -18,7 +18,7 @@ export function selectRandomEvent():
     Math.random() * totalWeight;
 
   for (const event of eventPool) {
-    random -= event.probability;
+    random -= event.weight;
 
     if (random <= 0) {
       return event;
