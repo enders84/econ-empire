@@ -17,6 +17,7 @@ export interface QuarterlyReport {
     | "Recession"
     | "Recovery";
 
+      
   summary: string[];
 
   eventTitle?: string;

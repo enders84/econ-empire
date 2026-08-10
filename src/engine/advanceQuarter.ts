@@ -4,7 +4,7 @@ import { runEconomy } from "./economy/economy";
 import { calculateInflation } from "./economy/calculateInflation";
 import { calculateUnemployment } from "./economy/calculateUnemployment";
 import { calculateBusinessCycle } from "./economy/calculateBusinessCycle";
-
+import { generateEconomicNews } from "./news/generateEconomicNews";
 import { applyEvent } from "./events/applyEvent";
 import { selectRandomEvent } from "./events/selectRandomEvent";
 
@@ -105,7 +105,8 @@ export function advanceQuarter(
     100;
 
   // 8. Save the completed quarter.
-  const updatedState: GameState = {
+  // 8. Build the completed quarter before news.
+const stateBeforeNews: GameState = {
   ...stateAfterEvent,
 
   quarter: nextQuarter,
@@ -162,19 +163,40 @@ export function advanceQuarter(
     },
   ],
 
-  news:
-    selectedEvent !== null
-      ? [
-          ...previousState.news,
-          {
-            year: nextYear,
-            quarter: nextQuarter,
-            title: selectedEvent.title,
-            description:
-              selectedEvent.description,
-          },
-        ]
-      : previousState.news,
+  news: previousState.news,
 };
-  return updatedState;
+
+// 9. Generate economic headlines from the
+// completed quarter.
+const generatedNews = generateEconomicNews(
+  previousState,
+  stateBeforeNews,
+);
+
+const eventNews =
+  selectedEvent !== null
+    ? [
+        {
+          year: nextYear,
+          quarter: nextQuarter,
+          title: selectedEvent.title,
+          description:
+            selectedEvent.description,
+          category: "Event" as const,
+        },
+      ]
+    : [];
+
+// 10. Save all news for the quarter.
+const updatedState: GameState = {
+  ...stateBeforeNews,
+
+  news: [
+    ...previousState.news,
+    ...eventNews,
+    ...generatedNews,
+  ],
+};
+
+return updatedState;
 }
