@@ -10,5 +10,15 @@ export interface QuarterlyReport {
   budgetBalance: number;
   debtToGdp: number;
 
+  businessCycle:
+    | "Expansion"
+    | "Boom"
+    | "Slowdown"
+    | "Recession"
+    | "Recovery";
+
   summary: string[];
+
+  eventTitle?: string;
+  eventDescription?: string;
 }

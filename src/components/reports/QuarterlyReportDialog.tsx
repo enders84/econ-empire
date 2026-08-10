@@ -20,7 +20,10 @@ interface QuarterlyReportDialogProps {
   onClose: () => void;
 }
 
-type MetricTone = "positive" | "negative" | "neutral";
+type MetricTone =
+  | "positive"
+  | "negative"
+  | "neutral";
 
 interface ReportMetricProps {
   label: string;
@@ -29,7 +32,9 @@ interface ReportMetricProps {
   helperText?: string;
 }
 
-const percentChange = (value: number): string =>
+const percentChange = (
+  value: number,
+): string =>
   `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
 
 const money = (value: number): string =>
@@ -39,7 +44,9 @@ const money = (value: number): string =>
     maximumFractionDigits: 0,
   }).format(value);
 
-function getToneColor(tone: MetricTone): string {
+function getToneColor(
+  tone: MetricTone,
+): string {
   if (tone === "positive") {
     return "success.main";
   }
@@ -154,6 +161,28 @@ export default function QuarterlyReportDialog({
     return null;
   }
 
+  const cycleIcon =
+    report.businessCycle === "Expansion"
+      ? "🟢"
+      : report.businessCycle === "Recovery"
+        ? "🔵"
+        : report.businessCycle === "Slowdown"
+          ? "🟡"
+          : report.businessCycle === "Boom"
+            ? "🔥"
+            : "🔴";
+
+  const cycleColor =
+    report.businessCycle === "Expansion"
+      ? "success.main"
+      : report.businessCycle === "Recovery"
+        ? "info.main"
+        : report.businessCycle === "Slowdown"
+          ? "warning.main"
+          : report.businessCycle === "Boom"
+            ? "warning.main"
+            : "error.main";
+
   const budgetTone: MetricTone =
     report.budgetBalance > 0
       ? "positive"
@@ -199,6 +228,17 @@ export default function QuarterlyReportDialog({
         >
           Year {report.year} • Quarter {report.quarter}
         </Typography>
+
+        <Typography
+          variant="h6"
+          sx={{
+            mt: 1,
+            fontWeight: 800,
+            color: cycleColor,
+          }}
+        >
+          {cycleIcon} {report.businessCycle}
+        </Typography>
       </DialogTitle>
 
       <DialogContent>
@@ -216,15 +256,23 @@ export default function QuarterlyReportDialog({
         >
           <ReportMetric
             label="GDP Growth"
-            value={percentChange(report.gdpChange)}
-            tone={getStandardChangeTone(report.gdpChange)}
+            value={percentChange(
+              report.gdpChange,
+            )}
+            tone={getStandardChangeTone(
+              report.gdpChange,
+            )}
             helperText="Change from the previous quarter"
           />
 
           <ReportMetric
             label="Inflation Change"
-            value={percentChange(report.inflationChange)}
-            tone={getInflationTone(report.inflationChange)}
+            value={percentChange(
+              report.inflationChange,
+            )}
+            tone={getInflationTone(
+              report.inflationChange,
+            )}
             helperText="Quarter-over-quarter movement"
           />
 
@@ -241,7 +289,9 @@ export default function QuarterlyReportDialog({
 
           <ReportMetric
             label="Approval Change"
-            value={percentChange(report.approvalChange)}
+            value={percentChange(
+              report.approvalChange,
+            )}
             tone={getStandardChangeTone(
               report.approvalChange,
             )}
@@ -250,7 +300,9 @@ export default function QuarterlyReportDialog({
 
           <ReportMetric
             label="Budget Balance"
-            value={money(report.budgetBalance)}
+            value={money(
+              report.budgetBalance,
+            )}
             tone={budgetTone}
             helperText={
               report.budgetBalance >= 0
@@ -285,30 +337,32 @@ export default function QuarterlyReportDialog({
               mt: 1,
             }}
           >
-            {report.summary.map((item, index) => (
-              <ListItem
-                key={`${item}-${index}`}
-                sx={{
-                  px: 0,
-                  alignItems: "flex-start",
-                }}
-              >
-                <Box
-                  component="span"
+            {report.summary.map(
+              (item, index) => (
+                <ListItem
+                  key={`${item}-${index}`}
                   sx={{
-                    color: "primary.main",
-                    fontWeight: 800,
-                    mr: 1,
+                    px: 0,
+                    alignItems: "flex-start",
                   }}
                 >
-                  •
-                </Box>
+                  <Box
+                    component="span"
+                    sx={{
+                      color: "primary.main",
+                      fontWeight: 800,
+                      mr: 1,
+                    }}
+                  >
+                    •
+                  </Box>
 
-                <Typography variant="body1">
-                  {item}
-                </Typography>
-              </ListItem>
-            ))}
+                  <Typography variant="body1">
+                    {item}
+                  </Typography>
+                </ListItem>
+              ),
+            )}
           </List>
         ) : (
           <Typography

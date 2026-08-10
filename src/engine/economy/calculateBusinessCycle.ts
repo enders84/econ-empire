@@ -5,16 +5,38 @@ export function calculateBusinessCycle(
   previousState: GameState,
   currentState: GameState,
 ): BusinessCycle {
-  const previousGDP =
-    previousState.economy.gdp;
+  const history = previousState.history;
 
-  const currentGDP =
-    currentState.economy.gdp;
+  const recentGrowth = history
+    .slice(-3)
+    .map((point) => point.gdpGrowth);
 
-  const growth =
-    ((currentGDP - previousGDP) /
-      Math.max(previousGDP, 1)) *
+  const currentGrowth =
+    ((currentState.economy.gdp -
+      previousState.economy.gdp) /
+      Math.max(previousState.economy.gdp, 1)) *
     100;
+
+  const growthSeries = [
+    ...recentGrowth,
+    currentGrowth,
+  ];
+
+  const averageGrowth =
+    growthSeries.reduce(
+      (sum, value) => sum + value,
+      0,
+    ) / Math.max(growthSeries.length, 1);
+
+  const negativeGrowthQuarters =
+    growthSeries.filter(
+      (growth) => growth < 0,
+    ).length;
+
+  const positiveGrowthQuarters =
+    growthSeries.filter(
+      (growth) => growth > 0,
+    ).length;
 
   const inflation =
     currentState.economy.inflation;
@@ -22,32 +44,49 @@ export function calculateBusinessCycle(
   const unemployment =
     currentState.economy.unemployment;
 
+  const outputGap =
+    currentState.economy.outputGap;
+
+  const previousCycle =
+    previousState.economy.businessCycle;
+
+  // Sustained contraction with a weak labor market.
   if (
-    growth < -1 &&
-    unemployment > 7
+    negativeGrowthQuarters >= 2 &&
+    outputGap < -2 &&
+    unemployment > 6
   ) {
     return "Recession";
   }
 
+  // Strong sustained growth with signs of overheating.
   if (
-    growth > 2 &&
-    inflation > 3
+    averageGrowth > 0.75 &&
+    positiveGrowthQuarters >= 3 &&
+    (inflation > 3 || outputGap > 2)
   ) {
     return "Boom";
   }
 
+  // Recovery requires that the economy was previously
+  // weak and has now returned to positive growth.
   if (
-    growth > 1 &&
-    unemployment < 5.5
-  ) {
-    return "Expansion";
-  }
-
-  if (
-    growth > 0 &&
-    unemployment > 6
+    (previousCycle === "Recession" ||
+      previousCycle === "Slowdown") &&
+    currentGrowth > 0 &&
+    outputGap < 0
   ) {
     return "Recovery";
+  }
+
+  // Sustained positive growth with healthy labor conditions.
+  if (
+    averageGrowth > 0.15 &&
+    positiveGrowthQuarters >= 3 &&
+    unemployment <= 6 &&
+    outputGap >= -1.5
+  ) {
+    return "Expansion";
   }
 
   return "Slowdown";

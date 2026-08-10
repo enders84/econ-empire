@@ -63,7 +63,8 @@ export function generateQuarterlyReport(
 
     debtToGdp:
       current.treasury.debtToGdp,
-
+     businessCycle:
+    current.economy.businessCycle,
     summary,
   };
 }

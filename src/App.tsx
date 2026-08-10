@@ -280,94 +280,96 @@ const [reportOpen, setReportOpen] =
               }}
             >
               <Tab label="Economy" />
+              <Tab label="Growth" />
               <Tab label="Labor" />
               <Tab label="Treasury" />
               <Tab label="Politics" />
-            </Tabs>
+              </Tabs>
 
-            <Box sx={{ p: 3 }}>
-              {chartTab === 0 && (
-              <Stack spacing={3}>
-               <HistoryChart
-                 title="GDP and Economic Capacity"
-                  data={gameState.history}
-                  lines={[
-                   {
-                    dataKey: "gdp",
-                    label: "Actual GDP",
-                   },
-                   {
-                     dataKey: "potentialGdp",
-                     label: "Potential GDP",
-                   },
-                    ]}
-                    />
+           <Box sx={{ p: 3 }}>
+  {chartTab === 0 && (
+    <HistoryChart
+      title="GDP and Economic Capacity"
+      data={gameState.history}
+      lines={[
+        {
+          dataKey: "gdp",
+          label: "Actual GDP",
+        },
+        {
+          dataKey: "potentialGdp",
+          label: "Potential GDP",
+        },
+      ]}
+    />
+  )}
 
-                 <HistoryChart
-                  title="GDP Growth and Output Gap"
-                  data={gameState.history}
-                  lines={[
-                     {
-                       dataKey: "gdpGrowth",
-                       label: "GDP Growth",
-                     },
-                     {
-                       dataKey: "outputGap",
-                       label: "Output Gap",
-                     },
-                      ]}
-                         />
-                         </Stack>
-                      )}              
-              {chartTab === 1 && (
-                <HistoryChart
-                  title="Inflation and Unemployment"
-                  data={gameState.history}
-                  lines={[
-                    {
-                      dataKey: "inflation",
-                      label: "Inflation",
-                    },
-                    {
-                      dataKey: "unemployment",
-                      label: "Unemployment",
-                    },
-                  ]}
-                />
-              )}
+  {chartTab === 1 && (
+    <HistoryChart
+      title="GDP Growth and Output Gap"
+      data={gameState.history}
+      lines={[
+        {
+          dataKey: "gdpGrowth",
+          label: "GDP Growth",
+        },
+        {
+          dataKey: "outputGap",
+          label: "Output Gap",
+        },
+      ]}
+    />
+  )}
 
-              {chartTab === 2 && (
-                <HistoryChart
-                  title="National Debt"
-                  data={gameState.history}
-                  lines={[
-                    {
-                      dataKey: "debt",
-                      label: "Debt",
-                    },
-                  ]}
-                />
-              )}
+  {chartTab === 2 && (
+    <HistoryChart
+      title="Inflation and Unemployment"
+      data={gameState.history}
+      lines={[
+        {
+          dataKey: "inflation",
+          label: "Inflation",
+        },
+        {
+          dataKey: "unemployment",
+          label: "Unemployment",
+        },
+      ]}
+    />
+  )}
 
-              {chartTab === 3 && (
-                <HistoryChart
-                  title="Approval Rating"
-                  data={gameState.history}
-                  lines={[
-                    {
-                      dataKey: "approval",
-                      label: "Approval",
-                    },
-                  ]}
-                />
-              )}
-            </Box>
-          </Paper>
+  {chartTab === 3 && (
+    <HistoryChart
+      title="National Debt"
+      data={gameState.history}
+      lines={[
+        {
+          dataKey: "debt",
+          label: "Debt",
+        },
+      ]}
+    />
+  )}
 
-          <PolicyPanel
-            policies={policies}
-            onPolicyChange={handlePolicyChange}
-          />
+  {chartTab === 4 && (
+    <HistoryChart
+      title="Approval Rating"
+      data={gameState.history}
+      lines={[
+        {
+          dataKey: "approval",
+          label: "Approval",
+        },
+      ]}
+    />
+  )}
+</Box>
+</Paper>
+
+<PolicyPanel
+  policies={policies}
+  onPolicyChange={handlePolicyChange}
+/>
 
           <Paper sx={{ p: 3 }}>
             <Stack

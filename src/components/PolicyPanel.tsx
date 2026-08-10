@@ -207,7 +207,7 @@ export default function PolicyPanel({
               minimum={0}
               maximum={100}
               step={1}
-              suffix=""
+              suffix="B"
               onChange={(value) =>
                 onPolicyChange("educationSpending", value)
               }
@@ -219,7 +219,7 @@ export default function PolicyPanel({
               minimum={0}
               maximum={100}
               step={1}
-              suffix=""
+              suffix="B"
               onChange={(value) =>
                 onPolicyChange("healthcareSpending", value)
               }
@@ -231,7 +231,7 @@ export default function PolicyPanel({
               minimum={0}
               maximum={100}
               step={1}
-              suffix=""
+              suffix="B"
               onChange={(value) =>
                 onPolicyChange(
                   "infrastructureSpending",
@@ -246,7 +246,7 @@ export default function PolicyPanel({
               minimum={0}
               maximum={100}
               step={1}
-              suffix=""
+              suffix="B"
               onChange={(value) =>
                 onPolicyChange("defenseSpending", value)
               }
@@ -258,7 +258,7 @@ export default function PolicyPanel({
               minimum={0}
               maximum={100}
               step={1}
-              suffix=""
+              suffix="B"
               onChange={(value) =>
                 onPolicyChange("scienceSpending", value)
               }
