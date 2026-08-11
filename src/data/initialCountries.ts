@@ -83,5 +83,6 @@ export function createDefaultGameState(): GameState {
   },
 ],
 news: [],
+activeEvents: [],
   };
 }

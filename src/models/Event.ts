@@ -7,6 +7,8 @@ export interface GameEvent {
 
   weight: number;
 
+  duration: number;
+
   effects: {
     gdp?: number;
     inflation?: number;

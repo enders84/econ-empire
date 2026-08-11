@@ -1,5 +1,5 @@
 import type { GameState } from "../models/GameState";
-
+import type { ActiveEvent } from "../models/ActiveEvent";
 import { runEconomy } from "./economy/economy";
 import { calculateInflation } from "./economy/calculateInflation";
 import { calculateUnemployment } from "./economy/calculateUnemployment";
@@ -72,17 +72,61 @@ export function advanceQuarter(
     treasuryState,
   );
 
-  // 5. Determine and apply a random event.
-  const selectedEvent =
-    selectRandomEvent();
+  // 5. Reapply active multi-quarter events.
+let stateAfterActiveEvents = politicsState;
 
-  const stateAfterEvent =
-    selectedEvent !== null
-      ? applyEvent(
-          politicsState,
-          selectedEvent,
-        )
-      : politicsState;
+for (const activeEvent of previousState.activeEvents) {
+  stateAfterActiveEvents = applyEvent(
+    stateAfterActiveEvents,
+    activeEvent.event,
+  );
+}
+
+// Count down existing active events.
+const remainingActiveEvents: ActiveEvent[] =
+  previousState.activeEvents
+    .map((activeEvent) => ({
+      ...activeEvent,
+      remainingQuarters:
+        activeEvent.remainingQuarters - 1,
+    }))
+    .filter(
+      (activeEvent) =>
+        activeEvent.remainingQuarters > 0,
+    );
+
+// 6. Determine and apply a new random event.
+const selectedEvent =
+  selectRandomEvent();
+
+const stateAfterEvent =
+  selectedEvent !== null
+    ? applyEvent(
+        stateAfterActiveEvents,
+        selectedEvent,
+      )
+    : stateAfterActiveEvents;
+
+// Add a newly triggered multi-quarter event.
+// The first quarter has already been applied above,
+// so only the remaining quarters are stored.
+const newActiveEvent: ActiveEvent | null =
+  selectedEvent !== null &&
+  selectedEvent.duration > 1
+    ? {
+        event: selectedEvent,
+        remainingQuarters:
+          selectedEvent.duration - 1,
+      }
+    : null;
+
+const activeEvents: ActiveEvent[] =
+  newActiveEvent !== null
+    ? [
+        ...remainingActiveEvents,
+        newActiveEvent,
+      ]
+    : remainingActiveEvents;
 
   // 6. Determine the business cycle using
   // the final economic conditions.
@@ -121,7 +165,7 @@ const stateBeforeNews: GameState = {
     ...stateAfterEvent.economy,
     businessCycle,
   },
-
+  activeEvents,
   politics: {
     ...stateAfterEvent.politics,
     currentYear: nextYear,

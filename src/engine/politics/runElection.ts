@@ -24,11 +24,11 @@ export function runElection(
     return state;
   }
 
+  const latestHistory =
+    state.history[state.history.length - 1];
+
   const growth =
-    state.history.length > 0
-      ? state.history[state.history.length - 1]
-          .gdpGrowth
-      : 0;
+    latestHistory?.gdpGrowth ?? 0;
 
   const unemployment =
     state.economy.unemployment;
@@ -38,13 +38,19 @@ export function runElection(
 
   let electionScore = approval;
 
-  electionScore += growth * 3;
+  // Economic performance matters,
+  // but approval remains the main driver.
+  electionScore += growth * 1.5;
 
   electionScore -=
-    Math.max(0, unemployment - 5) * 2;
+    Math.max(0, unemployment - 5) * 0.75;
 
   electionScore -=
-    Math.abs(inflation - 2) * 1.5;
+    Math.max(0, Math.abs(inflation - 2) - 1) *
+    0.75;
+
+  // Small incumbency advantage.
+  electionScore += 3;
 
   electionScore = clamp(
     electionScore,
@@ -53,7 +59,7 @@ export function runElection(
   );
 
   const result =
-    electionScore >= 50
+    electionScore >= 48
       ? "Won"
       : "Lost";
 

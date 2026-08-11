@@ -11,6 +11,8 @@ export const eventPool: GameEvent[] = [
 
     weight: 10,
 
+    duration: 3,
+
     effects: {
       inflation: 0.5,
       gdp: -0.6,
@@ -28,6 +30,8 @@ export const eventPool: GameEvent[] = [
 
     weight: 8,
 
+    duration: 4,
+
     effects: {
       productivity: 0.005,
       gdp: 0.8,
@@ -43,6 +47,8 @@ export const eventPool: GameEvent[] = [
       "Households increased spending.",
 
     weight: 12,
+
+    duration: 1,
 
     effects: {
       gdp: 0.4,

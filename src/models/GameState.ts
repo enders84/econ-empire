@@ -1,7 +1,7 @@
 import type { HistoryPoint } from "./History";
 import type { PolicyState } from "./PolicyState";
 import type { NewsItem } from "./NewsItem";
-
+import type { ActiveEvent } from "./ActiveEvent";
 export interface EconomyState {
   gdp: number;
   potentialGdp: number;
@@ -60,10 +60,10 @@ export interface GameState {
   treasury: TreasuryState;
   politics: PoliticalState;
   policy: PolicyState;
-
+  
   history: HistoryPoint[];
   news: NewsItem[];
-
+  activeEvents: ActiveEvent[];
   currentEventTitle?: string;
   currentEventDescription?: string;
 }
