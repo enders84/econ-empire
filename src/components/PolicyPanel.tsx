@@ -9,6 +9,8 @@ import {
 export interface PolicyDraft {
   incomeTax: number;
   interestRate: number;
+  tariffRate: number;
+
   educationSpending: number;
   healthcareSpending: number;
   defenseSpending: number;
@@ -158,6 +160,17 @@ export default function PolicyPanel({
               gap: 3,
             }}
           >
+            <PolicySlider
+              label="Tariff Rate"
+              value={policies.tariffRate}
+              minimum={0}
+              maximum={30}
+              step={1}
+              suffix="%"
+              onChange={(value) =>
+                onPolicyChange("tariffRate", value)
+              }
+            />
             <PolicySlider
               label="Income Tax"
               value={policies.incomeTax}

@@ -12,29 +12,53 @@ export function runTreasury(
     0,
   );
 
+  /*
+   * INCOME TAX REVENUE
+   */
   const incomeTaxRate =
     state.policy.incomeTaxRate / 100;
 
   const taxableShareOfGDP =
     ECONOMY.TAXABLE_SHARE_OF_GDP;
 
-  /*
-   * GDP is displayed as an annualized economic level,
-   * but each simulation turn represents one quarter.
-   * Convert annual revenue into a quarterly flow.
-   */
-  const annualRevenue =
+  const annualIncomeTaxRevenue =
     annualizedGDP *
     taxableShareOfGDP *
     incomeTaxRate;
 
-  const quarterlyRevenue =
-    annualRevenue / 4;
+  const quarterlyIncomeTaxRevenue =
+    annualIncomeTaxRevenue / 4;
 
   /*
-   * Government spending is also treated as an
-   * annual budget, so only one quarter of it should
-   * be charged during each turn.
+   * TARIFF REVENUE
+   *
+   * Imports are stored as annualized economic flows,
+   * so tariff revenue must also be divided by four
+   * for the quarterly treasury calculation.
+   */
+  const tariffRate =
+    state.policy.tariffRate / 100;
+
+  const annualImports = Math.max(
+    state.economy.imports,
+    0,
+  );
+
+  const annualTariffRevenue =
+    annualImports * tariffRate;
+
+  const quarterlyTariffRevenue =
+    annualTariffRevenue / 4;
+
+  /*
+   * TOTAL GOVERNMENT REVENUE
+   */
+  const quarterlyRevenue =
+    quarterlyIncomeTaxRevenue +
+    quarterlyTariffRevenue;
+
+  /*
+   * PROGRAM SPENDING
    */
   const annualProgramExpenses =
     state.economy.governmentSpending;
@@ -42,6 +66,9 @@ export function runTreasury(
   const quarterlyProgramExpenses =
     annualProgramExpenses / 4;
 
+  /*
+   * INTEREST PAYMENTS
+   */
   const quarterlyInterestRate =
     state.policy.policyInterestRate /
     100 /
@@ -51,17 +78,28 @@ export function runTreasury(
     state.treasury.debt *
     quarterlyInterestRate;
 
+  /*
+   * TOTAL EXPENSES
+   */
   const quarterlyExpenses =
     quarterlyProgramExpenses +
     interestPayments;
 
+  /*
+   * BUDGET BALANCE
+   */
   const budgetBalance =
     quarterlyRevenue -
     quarterlyExpenses;
 
   /*
-   * A deficit is negative, so subtracting it adds
-   * to debt. A surplus is positive and reduces debt.
+   * NATIONAL DEBT
+   *
+   * Negative budget balance = deficit,
+   * which increases debt.
+   *
+   * Positive budget balance = surplus,
+   * which reduces debt.
    */
   const debt = Math.max(
     0,
@@ -80,16 +118,27 @@ export function runTreasury(
     treasury: {
       ...state.treasury,
 
-      revenue: round(quarterlyRevenue),
-      expenses: round(quarterlyExpenses),
-      interestPayments:
-        round(interestPayments),
+      revenue: round(
+        quarterlyRevenue,
+      ),
 
-      budgetBalance:
-        round(budgetBalance),
+      expenses: round(
+        quarterlyExpenses,
+      ),
+
+      interestPayments: round(
+        interestPayments,
+      ),
+
+      budgetBalance: round(
+        budgetBalance,
+      ),
 
       debt: round(debt),
-      debtToGdp: round(debtToGdp),
+
+      debtToGdp: round(
+        debtToGdp,
+      ),
     },
   };
 }

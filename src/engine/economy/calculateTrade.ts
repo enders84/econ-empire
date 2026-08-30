@@ -30,7 +30,8 @@ export function calculateTrade(
 
   const interestRate =
     state.policy.policyInterestRate;
-
+const tariffRate =
+  state.policy.tariffRate;
   /*
    * EXPORTS
    *
@@ -96,11 +97,16 @@ export function calculateTrade(
     1,
     1.15,
   );
-
+  const tariffImportEffect = clamp(
+  1 - tariffRate * 0.015,
+  0.55,
+  1,
+);
   const targetImports =
     baseImports *
     importDemandEffect *
-    importInflationEffect;
+    importInflationEffect *
+    tariffImportEffect;
 
   /*
    * Trade flows adjust gradually instead of

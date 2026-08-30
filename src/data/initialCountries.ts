@@ -53,7 +53,7 @@ export function createDefaultGameState(): GameState {
 },
     policy: {
   incomeTaxRate: 30,
-
+  tariffRate: 0,
   educationBudget: 40,
   healthcareBudget: 40,
   infrastructureBudget: 40,

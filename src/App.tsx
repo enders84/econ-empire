@@ -33,6 +33,8 @@ import { generateQuarterlyReport } from "./engine/reports/generateQuarterlyRepor
 import { createCountries } from "./data/createCountries";
 import { advanceWorld } from "./engine/world/advanceWorld";
 import type { Country } from "./models/Country";
+import WorldEconomyPanel from "./components/world/WorldEconomyPanel";
+
 import type { QuarterlyReport } from "./models/QuarterlyReport";
 import DeveloperPanel from "./components/debug/DeveloperPanel";
 const theme = createTheme({
@@ -52,6 +54,7 @@ function createPolicies(state: GameState): PolicyDraft {
   return {
     incomeTax: state.treasury.incomeTax,
     interestRate: state.economy.interestRate,
+    tariffRate: state.policy.tariffRate,
     educationSpending: state.treasury.educationSpending,
     healthcareSpending: state.treasury.healthcareSpending,
     defenseSpending: state.treasury.defenseSpending,
@@ -126,7 +129,7 @@ function App() {
 
       policy: {
         incomeTaxRate: policies.incomeTax,
-
+        tariffRate: policies.tariffRate,
         educationBudget:
           policies.educationSpending,
         healthcareBudget:
@@ -137,7 +140,7 @@ function App() {
           policies.infrastructureSpending,
         scienceBudget:
           policies.scienceSpending,
-
+        
         policyInterestRate:
           policies.interestRate,
       },
@@ -491,162 +494,10 @@ function App() {
 )}
 
 {chartTab === 6 && (
-  <Box>
-    <Typography
-      variant="h6"
-      sx={{
-        fontWeight: 800,
-        mb: 2,
-      }}
-    >
-      World Economic Rankings
-    </Typography>
-
-    <Stack spacing={2}>
-      {[...worldCountries]
-        .sort(
-          (a, b) =>
-            b.economy.economy.gdp -
-            a.economy.economy.gdp,
-        )
-        .map((country, index) => {
-          const latestHistory =
-            country.economy.history[
-              country.economy.history.length - 1
-            ];
-
-          return (
-            <Paper
-              key={country.id}
-              variant="outlined"
-              sx={{
-                p: 2,
-                backgroundColor:
-                  country.isPlayerControlled
-                    ? "action.selected"
-                    : "background.default",
-              }}
-            >
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: {
-                    xs: "1fr",
-                    md: "60px 2fr repeat(5, 1fr)",
-                  },
-                  gap: 2,
-                  alignItems: "center",
-                }}
-              >
-                <Typography sx={{ fontWeight: 800 }}>
-                  #{index + 1}
-                </Typography>
-
-                <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{ fontWeight: 800 }}
-                  >
-                    {country.flag} {country.name}
-                  </Typography>
-
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "text.secondary" }}
-                  >
-                    Strategy: {country.strategy}
-                    {country.isPlayerControlled
-                      ? " • Player"
-                      : " • AI"}
-                  </Typography>
-                </Box>
-
-                <Box>
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "text.secondary" }}
-                  >
-                    GDP
-                  </Typography>
-
-                  <Typography sx={{ fontWeight: 700 }}>
-                    {money(
-                      country.economy.economy.gdp,
-                    )}
-                  </Typography>
-                </Box>
-
-                <Box>
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "text.secondary" }}
-                  >
-                    Growth
-                  </Typography>
-
-                  <Typography sx={{ fontWeight: 700 }}>
-                    {latestHistory
-                      ? `${latestHistory.gdpGrowth.toFixed(
-                          2,
-                        )}%`
-                      : "0.00%"}
-                  </Typography>
-                </Box>
-
-                <Box>
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "text.secondary" }}
-                  >
-                    Inflation
-                  </Typography>
-
-                  <Typography sx={{ fontWeight: 700 }}>
-                    {country.economy.economy.inflation.toFixed(
-                      2,
-                    )}
-                    %
-                  </Typography>
-                </Box>
-
-                <Box>
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "text.secondary" }}
-                  >
-                    Unemployment
-                  </Typography>
-
-                  <Typography sx={{ fontWeight: 700 }}>
-                    {country.economy.economy.unemployment.toFixed(
-                      2,
-                    )}
-                    %
-                  </Typography>
-                </Box>
-
-                <Box>
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "text.secondary" }}
-                  >
-                    Debt / GDP
-                  </Typography>
-
-                  <Typography sx={{ fontWeight: 700 }}>
-                    {country.economy.treasury.debtToGdp.toFixed(
-                      1,
-                    )}
-                    %
-                  </Typography>
-                </Box>
-              </Box>
-            </Paper>
-             );
-            })}
-        </Stack>
-        </Box>
-      )}
+  <WorldEconomyPanel
+    countries={worldCountries}
+  />
+)}
       </Box>
       </Paper>
 

@@ -6,6 +6,6 @@ export interface PolicyState {
   infrastructureBudget: number;
   scienceBudget: number;
   defenseBudget: number;
-
+  tariffRate: number;
   policyInterestRate: number;
 }
