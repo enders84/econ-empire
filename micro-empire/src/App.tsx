@@ -4,6 +4,10 @@ import {
   Box,
   Button,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   FormControl,
   InputLabel,
   MenuItem,
@@ -178,6 +182,9 @@ function App() {
 
   const isTournamentMode =
     gameState.competition.mode === "Tournament";
+
+  const tournamentFinished =
+    isTournamentMode && gameState.competition.isFinished;
 
   return (
     <Box
@@ -494,9 +501,79 @@ function App() {
 
           <GameModeDialog
             open={modeDialogOpen}
-            onClose={() => setModeDialogOpen(false)}
+            onClose={() => undefined}
             onSelectMode={handleSelectMode}
           />
+
+          <Dialog
+            open={tournamentFinished && !modeDialogOpen}
+            maxWidth="sm"
+            fullWidth
+            disableEscapeKeyDown
+          >
+            <DialogTitle sx={{ fontWeight: 800 }}>
+              Tournament Complete
+            </DialogTitle>
+
+            <DialogContent>
+              <Typography
+                variant="h3"
+                sx={{ fontWeight: 900, mb: 1 }}
+              >
+                {gameState.competition.score.toLocaleString()} points
+              </Typography>
+
+              <Typography color="text.secondary" sx={{ mb: 3 }}>
+                You completed all {gameState.competition.totalQuarters} quarters.
+                Your final score reflects your profit, market share, cash,
+                completed challenges, and strategic penalties.
+              </Typography>
+
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2, 1fr)",
+                  gap: 2,
+                }}
+              >
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  <Typography color="text.secondary">Cash</Typography>
+                  <Typography sx={{ fontWeight: 800 }}>
+                    {money(gameState.cash)}
+                  </Typography>
+                </Paper>
+
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  <Typography color="text.secondary">Final Profit</Typography>
+                  <Typography sx={{ fontWeight: 800 }}>
+                    {money(gameState.firm.profit)}
+                  </Typography>
+                </Paper>
+
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  <Typography color="text.secondary">Market Share</Typography>
+                  <Typography sx={{ fontWeight: 800 }}>
+                    {gameState.firm.marketShare.toFixed(2)}%
+                  </Typography>
+                </Paper>
+
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  <Typography color="text.secondary">
+                    Challenges Completed
+                  </Typography>
+                  <Typography sx={{ fontWeight: 800 }}>
+                    {gameState.challenges.completedChallengeIds.length}
+                  </Typography>
+                </Paper>
+              </Box>
+            </DialogContent>
+
+            <DialogActions sx={{ px: 3, pb: 3 }}>
+              <Button variant="contained" onClick={handleReset}>
+                Start New Game
+              </Button>
+            </DialogActions>
+          </Dialog>
 
           <Stack direction="row" spacing={2}>
             <Button
