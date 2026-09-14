@@ -7,6 +7,7 @@ export interface CompetitionState {
   enabled: boolean;
   totalQuarters: number;
   quartersPlayed: number;
+  cumulativeProfit: number;
   score: number;
   isFinished: boolean;
 }
