@@ -6,7 +6,7 @@ export function calculateScore(
   const profitScore =
     Math.max(
       0,
-      state.firm.profit / 100,
+      state.competition.cumulativeProfit / 100,
     );
 
   const marketShareScore =
