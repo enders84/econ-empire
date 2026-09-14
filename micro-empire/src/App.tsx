@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import {
+  Alert,
   Box,
   Button,
   Container,
@@ -17,6 +18,7 @@ import {
   Stack,
   Tab,
   Tabs,
+  TextField,
   Typography,
 } from "@mui/material";
 
@@ -30,6 +32,11 @@ import { GameModeDialog } from "./components/GameModeDialog";
 import { createInitialGame } from "./data/initialGame";
 import { advanceQuarter } from "./engine/advanceQuarter";
 import { priceForQuantity } from "./engine/firm/calculateMarginalRevenue";
+import {
+  fetchLeaderboard,
+  submitTournamentScore,
+  type LeaderboardEntry,
+} from "./services/leaderboard";
 import type { GameMode } from "./models/Competition";
 import type { MarketStructure } from "./models/Market";
 
@@ -43,9 +50,18 @@ const money = (value: number): string =>
 function App() {
   const [gameState, setGameState] = useState(createInitialGame);
   const [analysisTab, setAnalysisTab] = useState(0);
-
-  // A new session must begin with an explicit mode selection.
   const [modeDialogOpen, setModeDialogOpen] = useState(true);
+
+  const [playerName, setPlayerName] = useState("");
+  const [scoreSubmitted, setScoreSubmitted] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState<
+    "idle" | "submitting" | "success" | "error"
+  >("idle");
+  const [submissionMessage, setSubmissionMessage] = useState("");
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const [leaderboardError, setLeaderboardError] = useState("");
 
   const handlePriceChange = (
     _event: Event,
@@ -177,7 +193,76 @@ function App() {
 
     setGameState(newGame);
     setAnalysisTab(0);
+    setPlayerName("");
+    setScoreSubmitted(false);
+    setSubmissionStatus("idle");
+    setSubmissionMessage("");
+    setLeaderboardOpen(false);
     setModeDialogOpen(false);
+  };
+
+  const loadLeaderboard = async () => {
+    setLeaderboardLoading(true);
+    setLeaderboardError("");
+
+    try {
+      const entries = await fetchLeaderboard();
+      setLeaderboard(entries);
+    } catch (error) {
+      setLeaderboardError(
+        error instanceof Error
+          ? error.message
+          : "Unable to load the leaderboard.",
+      );
+    } finally {
+      setLeaderboardLoading(false);
+    }
+  };
+
+  const handleOpenLeaderboard = async () => {
+    setLeaderboardOpen(true);
+    await loadLeaderboard();
+  };
+
+  const handleSubmitScore = async () => {
+    const trimmedName = playerName.trim();
+
+    if (trimmedName.length < 2) {
+      setSubmissionStatus("error");
+      setSubmissionMessage("Enter your name before submitting your score.");
+      return;
+    }
+
+    if (scoreSubmitted) {
+      return;
+    }
+
+    setSubmissionStatus("submitting");
+    setSubmissionMessage("");
+
+    try {
+      await submitTournamentScore({
+        player_name: trimmedName,
+        score: gameState.competition.score,
+        cumulative_profit: gameState.competition.cumulativeProfit,
+        cash: gameState.cash,
+        market_share: gameState.firm.marketShare,
+        challenges_completed:
+          gameState.challenges.completedChallengeIds.length,
+      });
+
+      setScoreSubmitted(true);
+      setSubmissionStatus("success");
+      setSubmissionMessage("Score submitted to the class leaderboard.");
+      await loadLeaderboard();
+    } catch (error) {
+      setSubmissionStatus("error");
+      setSubmissionMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to submit your score.",
+      );
+    }
   };
 
   const isTournamentMode =
@@ -524,14 +609,17 @@ function App() {
 
               <Typography color="text.secondary" sx={{ mb: 3 }}>
                 You completed all {gameState.competition.totalQuarters} quarters.
-                Your final score reflects your profit, market share, cash,
-                completed challenges, and strategic penalties.
+                Your final score reflects your cumulative profit, market share,
+                cash, completed challenges, and strategic penalties.
               </Typography>
 
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(2, 1fr)",
+                  gridTemplateColumns: {
+                    xs: "1fr",
+                    sm: "repeat(2, 1fr)",
+                  },
                   gap: 2,
                 }}
               >
@@ -543,9 +631,11 @@ function App() {
                 </Paper>
 
                 <Paper variant="outlined" sx={{ p: 2 }}>
-                  <Typography color="text.secondary">Final Profit</Typography>
+                  <Typography color="text.secondary">
+                    12-Quarter Cumulative Profit
+                  </Typography>
                   <Typography sx={{ fontWeight: 800 }}>
-                    {money(gameState.firm.profit)}
+                    {money(gameState.competition.cumulativeProfit)}
                   </Typography>
                 </Paper>
 
@@ -565,11 +655,127 @@ function App() {
                   </Typography>
                 </Paper>
               </Box>
+
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="h6" sx={{ fontWeight: 800, mb: 1 }}>
+                  Submit to Leaderboard
+                </Typography>
+
+                <Typography color="text.secondary" sx={{ mb: 2 }}>
+                  Enter the name you want your instructor to see. Only your best
+                  submitted score will be shown on the leaderboard.
+                </Typography>
+
+                <TextField
+                  fullWidth
+                  label="Student name"
+                  value={playerName}
+                  onChange={(event) => setPlayerName(event.target.value)}
+                  disabled={scoreSubmitted || submissionStatus === "submitting"}
+                  inputProps={{ maxLength: 60 }}
+                />
+
+                {submissionStatus !== "idle" && submissionMessage && (
+                  <Alert
+                    severity={submissionStatus === "success" ? "success" : "error"}
+                    sx={{ mt: 2 }}
+                  >
+                    {submissionMessage}
+                  </Alert>
+                )}
+              </Box>
+            </DialogContent>
+
+            <DialogActions sx={{ px: 3, pb: 3, flexWrap: "wrap" }}>
+              <Button onClick={handleOpenLeaderboard}>
+                View Leaderboard
+              </Button>
+
+              <Button
+                variant="outlined"
+                onClick={handleSubmitScore}
+                disabled={scoreSubmitted || submissionStatus === "submitting"}
+              >
+                {submissionStatus === "submitting"
+                  ? "Submitting..."
+                  : scoreSubmitted
+                    ? "Score Submitted"
+                    : "Submit Score"}
+              </Button>
+
+              <Button variant="contained" onClick={handleReset}>
+                Start New Game
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          <Dialog
+            open={leaderboardOpen}
+            onClose={() => setLeaderboardOpen(false)}
+            maxWidth="sm"
+            fullWidth
+          >
+            <DialogTitle sx={{ fontWeight: 800 }}>
+              Micro Empire Leaderboard
+            </DialogTitle>
+
+            <DialogContent>
+              {leaderboardLoading && (
+                <Typography color="text.secondary">
+                  Loading leaderboard...
+                </Typography>
+              )}
+
+              {!leaderboardLoading && leaderboardError && (
+                <Alert severity="error">{leaderboardError}</Alert>
+              )}
+
+              {!leaderboardLoading && !leaderboardError && leaderboard.length === 0 && (
+                <Typography color="text.secondary">
+                  No tournament scores have been submitted yet.
+                </Typography>
+              )}
+
+              {!leaderboardLoading && !leaderboardError && leaderboard.length > 0 && (
+                <Stack spacing={1.25}>
+                  {leaderboard.map((entry, index) => (
+                    <Paper
+                      key={entry.id}
+                      variant="outlined"
+                      sx={{
+                        p: 2,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 2,
+                      }}
+                    >
+                      <Box>
+                        <Typography sx={{ fontWeight: 800 }}>
+                          #{index + 1} {entry.player_name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Profit {money(entry.cumulative_profit)} • Market Share{" "}
+                          {Number(entry.market_share).toFixed(2)}%
+                        </Typography>
+                      </Box>
+
+                      <Typography variant="h6" sx={{ fontWeight: 900 }}>
+                        {entry.score.toLocaleString()}
+                      </Typography>
+                    </Paper>
+                  ))}
+                </Stack>
+              )}
             </DialogContent>
 
             <DialogActions sx={{ px: 3, pb: 3 }}>
-              <Button variant="contained" onClick={handleReset}>
-                Start New Game
+              <Button onClick={loadLeaderboard}>Refresh</Button>
+              <Button
+                variant="contained"
+                onClick={() => setLeaderboardOpen(false)}
+              >
+                Close
               </Button>
             </DialogActions>
           </Dialog>
