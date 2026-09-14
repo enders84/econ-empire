@@ -154,6 +154,7 @@ function App() {
         cash: gameState.cash,
         market_share: gameState.firm.marketShare,
         challenges_completed: gameState.challenges.completedChallengeIds.length,
+        market_structures: gameState.competition.marketStructuresUsed,
       });
       setScoreSubmitted(true);
       setSubmissionStatus("success");
@@ -321,6 +322,11 @@ function App() {
                 <Typography color="text.secondary">
                   Tournament player: <b>{playerName}</b>. This name was entered before the tournament began and cannot be changed for this run.
                 </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  Market structures used: {gameState.competition.marketStructuresUsed.length > 0
+                    ? gameState.competition.marketStructuresUsed.join(" → ")
+                    : "None recorded"}
+                </Typography>
                 {submissionStatus !== "idle" && submissionMessage && (
                   <Alert severity={submissionStatus === "success" ? "success" : "error"} sx={{ mt: 2 }}>{submissionMessage}</Alert>
                 )}
@@ -345,17 +351,29 @@ function App() {
               )}
               {!leaderboardLoading && !leaderboardError && leaderboard.length > 0 && (
                 <Stack spacing={1.25}>
-                  {leaderboard.map((entry, index) => (
-                    <Paper key={entry.id} variant="outlined" sx={{ p: 2, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2 }}>
-                      <Box>
-                        <Typography sx={{ fontWeight: 800 }}>#{index + 1} {entry.player_name}</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Profit {money(entry.cumulative_profit)} • Market Share {Number(entry.market_share).toFixed(2)}%
-                        </Typography>
-                      </Box>
-                      <Typography variant="h6" sx={{ fontWeight: 900 }}>{entry.score.toLocaleString()}</Typography>
-                    </Paper>
-                  ))}
+                  {leaderboard.map((entry, index) => {
+                    const previousScore = index > 0 ? leaderboard[index - 1].score : null;
+                    const rank = previousScore === entry.score
+                      ? leaderboard.findIndex((row) => row.score === entry.score) + 1
+                      : index + 1;
+
+                    return (
+                      <Paper key={entry.id} variant="outlined" sx={{ p: 2, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2 }}>
+                        <Box>
+                          <Typography sx={{ fontWeight: 800 }}>#{rank} {entry.player_name}</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Profit {money(entry.cumulative_profit)} • Market Share {Number(entry.market_share).toFixed(2)}%
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                            Structures: {entry.market_structures?.length > 0
+                              ? entry.market_structures.join(" → ")
+                              : "Not recorded"}
+                          </Typography>
+                        </Box>
+                        <Typography variant="h6" sx={{ fontWeight: 900 }}>{entry.score.toLocaleString()}</Typography>
+                      </Paper>
+                    );
+                  })}
                 </Stack>
               )}
             </DialogContent>
