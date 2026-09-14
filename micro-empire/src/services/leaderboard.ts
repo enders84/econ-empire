@@ -9,6 +9,7 @@ export interface LeaderboardEntry {
   cash: number;
   market_share: number;
   challenges_completed: number;
+  market_structures: string[];
   created_at: string;
 }
 
@@ -19,6 +20,7 @@ export interface ScoreSubmission {
   cash: number;
   market_share: number;
   challenges_completed: number;
+  market_structures: string[];
 }
 
 const headers = {
