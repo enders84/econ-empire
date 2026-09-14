@@ -8,8 +8,12 @@ create table if not exists public.micro_empire_scores (
   cash numeric not null,
   market_share numeric not null check (market_share >= 0 and market_share <= 100),
   challenges_completed integer not null check (challenges_completed >= 0),
+  market_structures text[] not null default '{}',
   created_at timestamptz not null default now()
 );
+
+alter table public.micro_empire_scores
+  add column if not exists market_structures text[] not null default '{}';
 
 alter table public.micro_empire_scores enable row level security;
 
