@@ -15,8 +15,14 @@ interface CompetitionPanelProps {
 export function CompetitionPanel({
   gameState,
 }: CompetitionPanelProps) {
-  const competition =
-    gameState.competition;
+  const competition = gameState.competition;
+
+  const displayQuarter = competition.isFinished
+    ? competition.totalQuarters
+    : Math.min(
+        competition.quartersPlayed + 1,
+        competition.totalQuarters,
+      );
 
   const progress =
     (competition.quartersPlayed /
@@ -68,8 +74,7 @@ export function CompetitionPanel({
         }}
       >
         <Typography>
-          Quarter{" "}
-          {competition.quartersPlayed} of{" "}
+          Quarter {displayQuarter} of{" "}
           {competition.totalQuarters}
         </Typography>
 
