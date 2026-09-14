@@ -1,8 +1,11 @@
 import type { GameState } from "../../models/GameState";
-import { runMonopoly } from "./monopoly";
+
 import { calculateDemand } from "./calculateDemand";
-import { runPerfectCompetition } from "./perfectCompetition";
+import { runMonopoly } from "./monopoly";
 import { runMonopolisticCompetition } from "./monopolisticCompetition";
+import { runOligopoly } from "./oligopoly";
+import { runPerfectCompetition } from "./perfectCompetition";
+
 export interface MarketResult {
   price: number;
   quantityDemanded: number;
@@ -13,61 +16,120 @@ export function runMarket(
   state: GameState,
 ): MarketResult {
   switch (state.market.structure) {
+    /*
+     * ======================================
+     * PERFECT COMPETITION
+     * ======================================
+     *
+     * The firm is a price taker.
+     */
     case "Perfect Competition": {
       const result =
         runPerfectCompetition(state);
 
       return {
-        price: result.marketPrice,
+        price:
+          result.marketPrice,
+
         quantityDemanded:
           result.quantityDemanded,
+
         marginalRevenue:
           result.marginalRevenue,
       };
     }
 
+    /*
+     * ======================================
+     * MONOPOLISTIC COMPETITION
+     * ======================================
+     *
+     * The firm has some pricing power
+     * because its product is differentiated.
+     */
     case "Monopolistic Competition": {
-      const result = runMonopolisticCompetition(state);
+      const result =
+        runMonopolisticCompetition(
+          state,
+        );
+
       return {
-        price: result.price,
+        price:
+          result.price,
+
         quantityDemanded:
-      result.quantityDemanded,
-    marginalRevenue:
-      result.marginalRevenue,
+          result.quantityDemanded,
+
+        marginalRevenue:
+          result.marginalRevenue,
       };
     }
 
+    /*
+     * ======================================
+     * OLIGOPOLY
+     * ======================================
+     *
+     * The firm's demand depends partly on
+     * its price relative to rival firms.
+     */
     case "Oligopoly": {
-      const quantityDemanded =
-        calculateDemand(state);
+      const result =
+        runOligopoly(state);
 
       return {
-        price: state.firm.price,
-        quantityDemanded,
-        marginalRevenue: 0,
+        price:
+          result.price,
+
+        quantityDemanded:
+          result.quantityDemanded,
+
+        marginalRevenue:
+          result.marginalRevenue,
       };
     }
 
+    /*
+     * ======================================
+     * MONOPOLY
+     * ======================================
+     *
+     * The monopolist faces the entire
+     * market demand curve.
+     */
     case "Monopoly": {
-  const result =
-    runMonopoly(state);
+      const result =
+        runMonopoly(state);
 
-  return {
-    price: result.price,
-    quantityDemanded:
-      result.quantityDemanded,
-    marginalRevenue:
-      result.marginalRevenue,
-  };
-}
+      return {
+        price:
+          result.price,
 
+        quantityDemanded:
+          result.quantityDemanded,
+
+        marginalRevenue:
+          result.marginalRevenue,
+      };
+    }
+
+    /*
+     * FALLBACK
+     *
+     * This shouldn't normally be reached,
+     * but keeping a fallback makes the
+     * engine more defensive.
+     */
     default: {
       const quantityDemanded =
         calculateDemand(state);
 
       return {
-        price: state.firm.price,
+        price:
+          state.firm.price,
+
         quantityDemanded,
+
         marginalRevenue: 0,
       };
     }

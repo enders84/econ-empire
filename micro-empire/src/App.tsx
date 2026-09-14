@@ -20,7 +20,7 @@ import DemandCurve from "./components/DemandCurve";
 import RevenueAnalysis from "./components/RevenueAnalysis";
 import CostCurves from "./components/CostCurves";
 import ProfitMaximization from "./components/ProfitMaximization";
-
+import { ChallengePanel } from "./components/ChallengePanel";
 import type { MarketStructure } from "./models/Market";
 
 import { createInitialGame } from "./data/initialGame";
@@ -216,7 +216,23 @@ function App() {
       advanceQuarter(state),
     );
   };
+/*
+ * START LEARNING CHALLENGE
+ */
+const handleStartChallenge = (
+  challengeId: string,
+) => {
+  setGameState((state) => ({
+    ...state,
 
+    challenges: {
+      ...state.challenges,
+
+      activeChallengeId:
+        challengeId,
+    },
+  }));
+};
   /*
    * RESET GAME
    */
@@ -597,7 +613,13 @@ function App() {
               )}
             </Stack>
           </Paper>
-
+        {/* LEARNING CHALLENGE */}
+<ChallengePanel
+  gameState={gameState}
+  onStartChallenge={
+    handleStartChallenge
+  }
+/>
           {/* ECONOMIC ANALYSIS */}
           <Paper sx={{ p: 2 }}>
             <Typography

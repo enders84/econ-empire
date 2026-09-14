@@ -19,7 +19,9 @@ import {
 import type { GameState } from "../models/GameState";
 import { calculateCosts } from "../engine/firm/calculateCosts";
 import { calculateMarginalRevenue } from "../engine/firm/calculateMarginalRevenue";
-
+import {
+  marginalRevenueForMonopolisticQuantity,
+} from "../engine/market/monopolisticCompetition";
 interface ProfitMaximizationProps {
   gameState: GameState;
 }
@@ -43,13 +45,20 @@ export default function ProfitMaximization({
     );
 
     const marginalRevenue =
-      gameState.market.structure ===
-      "Perfect Competition"
-        ? gameState.market.averageMarketPrice
-        : calculateMarginalRevenue(
-            gameState,
-            quantity,
-          );
+  gameState.market.structure ===
+  "Perfect Competition"
+    ? gameState.market.averageMarketPrice
+    : gameState.market.structure ===
+        "Monopolistic Competition"
+      ? marginalRevenueForMonopolisticQuantity(
+          gameState,
+          quantity,
+          gameState.firm.brandStrength,
+        )
+      : calculateMarginalRevenue(
+          gameState,
+          quantity,
+        );
 
     const difference = Math.abs(
       marginalRevenue - costs.marginalCost,
@@ -76,9 +85,16 @@ export default function ProfitMaximization({
   ).marginalCost;
 
   const currentMR =
-    gameState.market.structure ===
-    "Perfect Competition"
-      ? gameState.market.averageMarketPrice
+  gameState.market.structure ===
+  "Perfect Competition"
+    ? gameState.market.averageMarketPrice
+    : gameState.market.structure ===
+        "Monopolistic Competition"
+      ? marginalRevenueForMonopolisticQuantity(
+          gameState,
+          currentQuantity,
+          gameState.firm.brandStrength,
+        )
       : calculateMarginalRevenue(
           gameState,
           currentQuantity,
@@ -122,12 +138,15 @@ export default function ProfitMaximization({
         sx={{ mb: 3 }}
       >
         {gameState.market.structure ===
-        "Perfect Competition"
-          ? "In perfect competition, the firm is a price taker. Price equals marginal revenue, and profit is maximized where P = MR = MC."
-          : gameState.market.structure ===
-              "Monopoly"
-            ? "A monopolist faces the market demand curve. Marginal revenue is below price, and profit is maximized near the quantity where MR = MC."
-            : "Compare marginal revenue with marginal cost to determine whether your firm should increase or decrease production."}
+"Perfect Competition"
+  ? "In perfect competition, the firm is a price taker. Price equals marginal revenue, and profit is maximized where P = MR = MC."
+  : gameState.market.structure ===
+      "Monopoly"
+    ? "A monopolist faces the market demand curve. Marginal revenue is below price, and profit is maximized near the quantity where MR = MC."
+    : gameState.market.structure ===
+        "Monopolistic Competition"
+      ? "A monopolistically competitive firm faces a downward-sloping demand curve because its product is differentiated. Marginal revenue lies below price, and profit is maximized near the quantity where MR = MC."
+      : "Compare marginal revenue with marginal cost to determine whether your firm should increase or decrease production."}
       </Typography>
 
       <Box
