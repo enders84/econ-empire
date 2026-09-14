@@ -672,7 +672,7 @@ function App() {
                   value={playerName}
                   onChange={(event) => setPlayerName(event.target.value)}
                   disabled={scoreSubmitted || submissionStatus === "submitting"}
-                  inputProps={{ maxLength: 60 }}
+                  slotProps={{ htmlInput: { maxLength: 60 } }}
                 />
 
                 {submissionStatus !== "idle" && submissionMessage && (
