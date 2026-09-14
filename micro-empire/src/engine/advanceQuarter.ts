@@ -6,6 +6,7 @@ import { calculateEntryExit } from "./market/calculateEntryExit";
 import { calculateRivalReaction } from "./market/calculateRivalReaction";
 import { challenges } from "../data/challenges";
 import { evaluateChallenge } from "./challenges/challengeEvaluator";
+
 export function advanceQuarter(
   previousState: GameState,
 ): GameState {
@@ -13,17 +14,6 @@ export function advanceQuarter(
    * ========================================
    * STEP 1 — RUN THE FIRM
    * ========================================
-   *
-   * The player's current decisions are
-   * processed first.
-   *
-   * This calculates:
-   * - demand
-   * - units sold
-   * - revenue
-   * - costs
-   * - profit
-   * - cash
    */
   const stateAfterFirm =
     runFirm(previousState);
@@ -32,12 +22,6 @@ export function advanceQuarter(
    * ========================================
    * STEP 2 — ENTRY / EXIT
    * ========================================
-   *
-   * This mainly affects Monopolistic
-   * Competition.
-   *
-   * Economic profit creates entry pressure.
-   * Economic losses create exit pressure.
    */
   const entryExitResult =
     calculateEntryExit(
@@ -55,10 +39,11 @@ export function advanceQuarter(
 
       entryExitPressure:
         entryExitResult.entryExitPressure,
-        firmsEntered:
+
+      firmsEntered:
         entryExitResult.firmsEntered,
 
-        firmsExited:
+      firmsExited:
         entryExitResult.firmsExited,
     },
   };
@@ -67,15 +52,6 @@ export function advanceQuarter(
    * ========================================
    * STEP 3 — OLIGOPOLY RIVAL REACTION
    * ========================================
-   *
-   * Only run this system when the player
-   * is currently operating in Oligopoly.
-   *
-   * Rivals observe the player's price AFTER
-   * this quarter has been calculated.
-   *
-   * Their new price therefore affects the
-   * NEXT quarter.
    */
   if (
     stateAfterFirm.market.structure ===
@@ -112,7 +88,6 @@ export function advanceQuarter(
    * STEP 4 — ADVANCE THE CALENDAR
    * ========================================
    */
-
   const nextQuarter =
     previousState.quarter >= 4
       ? 1
@@ -123,108 +98,130 @@ export function advanceQuarter(
       ? previousState.year + 1
       : previousState.year;
 
- let updatedChallengeState =
-  stateAfterMarketResponse.challenges;
+  /*
+   * ========================================
+   * STEP 5 — EVALUATE CHALLENGE
+   * ========================================
+   */
+  let updatedChallengeState =
+    stateAfterMarketResponse.challenges;
 
-const activeChallengeId =
-  updatedChallengeState.activeChallengeId;
+  const activeChallengeId =
+    updatedChallengeState.activeChallengeId;
 
-if (activeChallengeId) {
-  const activeChallenge =
-    challenges.find(
-      (challenge) =>
-        challenge.id ===
-        activeChallengeId,
-    );
+  if (activeChallengeId) {
+    const activeChallenge =
+      challenges.find(
+        (challenge) =>
+          challenge.id ===
+          activeChallengeId,
+      );
 
-  if (
-    activeChallenge &&
-    evaluateChallenge(
-      activeChallenge,
-      stateAfterMarketResponse,
-    )
-  ) {
-    updatedChallengeState = {
-      activeChallengeId: null,
-
-      completedChallengeIds:
-        updatedChallengeState
-          .completedChallengeIds
-          .includes(activeChallenge.id)
-          ? updatedChallengeState
-              .completedChallengeIds
-          : [
-              ...updatedChallengeState
-                .completedChallengeIds,
-              activeChallenge.id,
-            ],
-    };
-  }
-}
-
-/*
- * ========================================
- * STEP 6 — UPDATE COMPETITION
- * ========================================
- */
-
-const isTournamentMode =
-  previousState.competition.mode ===
-  "Tournament";
-
-const nextQuartersPlayed =
-  isTournamentMode
-    ? previousState.competition
-        .quartersPlayed + 1
-    : previousState.competition
-        .quartersPlayed;
-
-const stateForScoring: GameState = {
-  ...stateAfterMarketResponse,
-
-  challenges:
-    updatedChallengeState,
-};
-
-const updatedScore =
-  isTournamentMode
-    ? calculateScore(
-        stateForScoring,
+    if (
+      activeChallenge &&
+      evaluateChallenge(
+        activeChallenge,
+        stateAfterMarketResponse,
       )
-    : previousState.competition.score;
+    ) {
+      updatedChallengeState = {
+        activeChallengeId: null,
 
-const competitionFinished =
-  isTournamentMode &&
-  nextQuartersPlayed >=
-    previousState.competition
-      .totalQuarters;
+        completedChallengeIds:
+          updatedChallengeState
+            .completedChallengeIds
+            .includes(activeChallenge.id)
+            ? updatedChallengeState
+                .completedChallengeIds
+            : [
+                ...updatedChallengeState
+                  .completedChallengeIds,
+                activeChallenge.id,
+              ],
+      };
+    }
+  }
 
-/*
- * ========================================
- * STEP 7 — RETURN NEXT QUARTER
- * ========================================
- */
+  /*
+   * ========================================
+   * STEP 6 — UPDATE COMPETITION
+   * ========================================
+   */
+  const isTournamentMode =
+    previousState.competition.mode ===
+    "Tournament";
 
-return {
-  ...stateAfterMarketResponse,
+  const nextQuartersPlayed =
+    isTournamentMode
+      ? previousState.competition
+          .quartersPlayed + 1
+      : previousState.competition
+          .quartersPlayed;
 
-  challenges:
-    updatedChallengeState,
+  const nextCumulativeProfit =
+    isTournamentMode
+      ? previousState.competition
+          .cumulativeProfit +
+        stateAfterMarketResponse.firm.profit
+      : previousState.competition
+          .cumulativeProfit;
 
-  competition: {
-    ...stateAfterMarketResponse.competition,
+  const stateForScoring: GameState = {
+    ...stateAfterMarketResponse,
 
-    quartersPlayed:
-      nextQuartersPlayed,
+    challenges:
+      updatedChallengeState,
 
-    score:
-      updatedScore,
+    competition: {
+      ...stateAfterMarketResponse.competition,
+      quartersPlayed:
+        nextQuartersPlayed,
+      cumulativeProfit:
+        nextCumulativeProfit,
+    },
+  };
 
-    isFinished:
-      competitionFinished,
-  },
+  const updatedScore =
+    isTournamentMode
+      ? calculateScore(
+          stateForScoring,
+        )
+      : previousState.competition.score;
 
-  year: nextYear,
-  quarter: nextQuarter,
-};
+  const competitionFinished =
+    isTournamentMode &&
+    nextQuartersPlayed >=
+      previousState.competition
+        .totalQuarters;
+
+  /*
+   * ========================================
+   * STEP 7 — RETURN NEXT QUARTER
+   * ========================================
+   */
+  return {
+    ...stateAfterMarketResponse,
+
+    challenges:
+      updatedChallengeState,
+
+    competition: {
+      ...stateAfterMarketResponse.competition,
+
+      quartersPlayed:
+        nextQuartersPlayed,
+
+      cumulativeProfit:
+        nextCumulativeProfit,
+
+      score:
+        updatedScore,
+
+      isFinished:
+        competitionFinished,
+    },
+
+    year: nextYear,
+    quarter: nextQuarter,
+  };
 }
