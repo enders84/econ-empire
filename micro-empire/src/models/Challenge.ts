@@ -5,6 +5,7 @@ export type ChallengeStatus =
   | "In Progress"
   | "Completed";
 
+
 export interface Challenge {
   id: string;
 
@@ -18,6 +19,10 @@ export interface Challenge {
 
   successMessage: string;
 }
+
+export type GameMode =
+  | "Learning"
+  | "Tournament";
 
 export interface ChallengeState {
   activeChallengeId: string | null;

@@ -1,4 +1,5 @@
 import type { GameState } from "../models/GameState";
+import { calculateScore } from "./competition/calculateScore";
 
 import { runFirm } from "./firm/runFirm";
 import { calculateEntryExit } from "./market/calculateEntryExit";
@@ -122,19 +123,7 @@ export function advanceQuarter(
       ? previousState.year + 1
       : previousState.year;
 
-  /*
-   * ========================================
-   * STEP 5 — RETURN NEXT QUARTER
-   * ========================================
-   */
-
- /*
- * ========================================
- * STEP 5 — EVALUATE ACTIVE CHALLENGE
- * ========================================
- */
-
-let updatedChallengeState =
+ let updatedChallengeState =
   stateAfterMarketResponse.challenges;
 
 const activeChallengeId =
@@ -159,23 +148,60 @@ if (activeChallengeId) {
       activeChallengeId: null,
 
       completedChallengeIds:
-  updatedChallengeState
-    .completedChallengeIds
-    .includes(activeChallenge.id)
-    ? updatedChallengeState
-        .completedChallengeIds
-    : [
-        ...updatedChallengeState
-          .completedChallengeIds,
-        activeChallenge.id,
-      ],
+        updatedChallengeState
+          .completedChallengeIds
+          .includes(activeChallenge.id)
+          ? updatedChallengeState
+              .completedChallengeIds
+          : [
+              ...updatedChallengeState
+                .completedChallengeIds,
+              activeChallenge.id,
+            ],
     };
   }
 }
 
 /*
  * ========================================
- * STEP 6 — RETURN NEXT QUARTER
+ * STEP 6 — UPDATE COMPETITION
+ * ========================================
+ */
+
+const isTournamentMode =
+  previousState.competition.mode ===
+  "Tournament";
+
+const nextQuartersPlayed =
+  isTournamentMode
+    ? previousState.competition
+        .quartersPlayed + 1
+    : previousState.competition
+        .quartersPlayed;
+
+const stateForScoring: GameState = {
+  ...stateAfterMarketResponse,
+
+  challenges:
+    updatedChallengeState,
+};
+
+const updatedScore =
+  isTournamentMode
+    ? calculateScore(
+        stateForScoring,
+      )
+    : previousState.competition.score;
+
+const competitionFinished =
+  isTournamentMode &&
+  nextQuartersPlayed >=
+    previousState.competition
+      .totalQuarters;
+
+/*
+ * ========================================
+ * STEP 7 — RETURN NEXT QUARTER
  * ========================================
  */
 
@@ -184,6 +210,19 @@ return {
 
   challenges:
     updatedChallengeState,
+
+  competition: {
+    ...stateAfterMarketResponse.competition,
+
+    quartersPlayed:
+      nextQuartersPlayed,
+
+    score:
+      updatedScore,
+
+    isFinished:
+      competitionFinished,
+  },
 
   year: nextYear,
   quarter: nextQuarter,

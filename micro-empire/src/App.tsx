@@ -22,11 +22,12 @@ import CostCurves from "./components/CostCurves";
 import ProfitMaximization from "./components/ProfitMaximization";
 import { ChallengePanel } from "./components/ChallengePanel";
 import type { MarketStructure } from "./models/Market";
-
+import { CompetitionPanel } from "./components/CompetitionPanel";
 import { createInitialGame } from "./data/initialGame";
 import { advanceQuarter } from "./engine/advanceQuarter";
 import { priceForQuantity } from "./engine/firm/calculateMarginalRevenue";
-
+import { GameModeDialog } from "./components/GameModeDialog";
+import type { GameMode } from "./models/Competition";
 const money = (value: number): string =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -40,7 +41,8 @@ function App() {
 
   const [analysisTab, setAnalysisTab] =
     useState(0);
-
+  const [modeDialogOpen, setModeDialogOpen] =
+  useState(false);
   /*
    * PRICE
    *
@@ -237,9 +239,23 @@ const handleStartChallenge = (
    * RESET GAME
    */
   const handleReset = () => {
-    setGameState(createInitialGame());
-    setAnalysisTab(0);
-  };
+  setModeDialogOpen(true);
+};
+
+const handleSelectMode = (
+  mode: GameMode,
+) => {
+  const newGame =
+    createInitialGame();
+
+  newGame.competition.mode = mode;
+  newGame.competition.enabled =
+    mode === "Tournament";
+
+  setGameState(newGame);
+  setAnalysisTab(0);
+  setModeDialogOpen(false);
+};
 
   return (
     <Box
@@ -613,12 +629,15 @@ const handleStartChallenge = (
               )}
             </Stack>
           </Paper>
-        {/* LEARNING CHALLENGE */}
+        {/* TOURNAMENT */}
+<CompetitionPanel
+  gameState={gameState}
+/>
+
+{/* LEARNING CHALLENGE */}
 <ChallengePanel
   gameState={gameState}
-  onStartChallenge={
-    handleStartChallenge
-  }
+  onStartChallenge={handleStartChallenge}
 />
           {/* ECONOMIC ANALYSIS */}
           <Paper sx={{ p: 2 }}>
@@ -750,21 +769,28 @@ const handleStartChallenge = (
               </Typography>
             </Paper>
           </Box>
-
+                <GameModeDialog
+  open={modeDialogOpen}
+  onClose={() =>
+    setModeDialogOpen(false)
+  }
+  onSelectMode={handleSelectMode}
+/>
           {/* GAME BUTTONS */}
           <Stack
             direction="row"
             spacing={2}
           >
             <Button
-              variant="contained"
-              size="large"
-              onClick={
-                handleAdvanceQuarter
-              }
-            >
-              Advance Quarter
-            </Button>
+  variant="contained"
+  size="large"
+  onClick={handleAdvanceQuarter}
+  disabled={gameState.competition.isFinished}
+>
+  {gameState.competition.isFinished
+    ? "Tournament Finished"
+    : "Advance Quarter"}
+</Button>
 
             <Button
               variant="outlined"

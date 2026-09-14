@@ -100,14 +100,11 @@ rivalReaction: "Stable",
       completedChallengeIds: [],
     },
     competition: {
-  enabled: true,
-
+  mode: "Learning",
+  enabled: false,
   totalQuarters: 12,
-
   quartersPlayed: 0,
-
   score: 0,
-
   isFinished: false,
 },
   };
