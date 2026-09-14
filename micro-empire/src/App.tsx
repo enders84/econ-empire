@@ -509,7 +509,6 @@ function App() {
             open={tournamentFinished && !modeDialogOpen}
             maxWidth="sm"
             fullWidth
-            disableEscapeKeyDown
           >
             <DialogTitle sx={{ fontWeight: 800 }}>
               Tournament Complete
