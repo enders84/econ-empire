@@ -10,19 +10,9 @@ import { evaluateChallenge } from "./challenges/challengeEvaluator";
 export function advanceQuarter(
   previousState: GameState,
 ): GameState {
-  /*
-   * ========================================
-   * STEP 1 — RUN THE FIRM
-   * ========================================
-   */
   const stateAfterFirm =
     runFirm(previousState);
 
-  /*
-   * ========================================
-   * STEP 2 — ENTRY / EXIT
-   * ========================================
-   */
   const entryExitResult =
     calculateEntryExit(
       stateAfterFirm,
@@ -33,26 +23,17 @@ export function advanceQuarter(
 
     market: {
       ...stateAfterFirm.market,
-
       numberOfFirms:
         entryExitResult.numberOfFirms,
-
       entryExitPressure:
         entryExitResult.entryExitPressure,
-
       firmsEntered:
         entryExitResult.firmsEntered,
-
       firmsExited:
         entryExitResult.firmsExited,
     },
   };
 
-  /*
-   * ========================================
-   * STEP 3 — OLIGOPOLY RIVAL REACTION
-   * ========================================
-   */
   if (
     stateAfterFirm.market.structure ===
     "Oligopoly"
@@ -67,27 +48,18 @@ export function advanceQuarter(
 
       market: {
         ...stateAfterMarketResponse.market,
-
         rivalPrice:
           rivalReaction.rivalPrice,
-
         previousRivalPrice:
           rivalReaction.previousRivalPrice,
-
         priceWarPressure:
           rivalReaction.priceWarPressure,
-
         rivalReaction:
           rivalReaction.reaction,
       },
     };
   }
 
-  /*
-   * ========================================
-   * STEP 4 — ADVANCE THE CALENDAR
-   * ========================================
-   */
   const nextQuarter =
     previousState.quarter >= 4
       ? 1
@@ -98,11 +70,6 @@ export function advanceQuarter(
       ? previousState.year + 1
       : previousState.year;
 
-  /*
-   * ========================================
-   * STEP 5 — EVALUATE CHALLENGE
-   * ========================================
-   */
   let updatedChallengeState =
     stateAfterMarketResponse.challenges;
 
@@ -142,11 +109,6 @@ export function advanceQuarter(
     }
   }
 
-  /*
-   * ========================================
-   * STEP 6 — UPDATE COMPETITION
-   * ========================================
-   */
   const isTournamentMode =
     previousState.competition.mode ===
     "Tournament";
@@ -166,6 +128,18 @@ export function advanceQuarter(
       : previousState.competition
           .cumulativeProfit;
 
+  const currentStructure =
+    stateAfterMarketResponse.market.structure;
+
+  const nextMarketStructuresUsed =
+    isTournamentMode &&
+    !previousState.competition.marketStructuresUsed.includes(currentStructure)
+      ? [
+          ...previousState.competition.marketStructuresUsed,
+          currentStructure,
+        ]
+      : previousState.competition.marketStructuresUsed;
+
   const stateForScoring: GameState = {
     ...stateAfterMarketResponse,
 
@@ -178,6 +152,8 @@ export function advanceQuarter(
         nextQuartersPlayed,
       cumulativeProfit:
         nextCumulativeProfit,
+      marketStructuresUsed:
+        nextMarketStructuresUsed,
     },
   };
 
@@ -194,11 +170,6 @@ export function advanceQuarter(
       previousState.competition
         .totalQuarters;
 
-  /*
-   * ========================================
-   * STEP 7 — RETURN NEXT QUARTER
-   * ========================================
-   */
   return {
     ...stateAfterMarketResponse,
 
@@ -207,16 +178,14 @@ export function advanceQuarter(
 
     competition: {
       ...stateAfterMarketResponse.competition,
-
       quartersPlayed:
         nextQuartersPlayed,
-
       cumulativeProfit:
         nextCumulativeProfit,
-
+      marketStructuresUsed:
+        nextMarketStructuresUsed,
       score:
         updatedScore,
-
       isFinished:
         competitionFinished,
     },
