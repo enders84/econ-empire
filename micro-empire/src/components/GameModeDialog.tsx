@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogTitle,
   Paper,
+  TextField,
   Typography,
 } from "@mui/material";
 
@@ -14,13 +15,19 @@ interface GameModeDialogProps {
   open: boolean;
   onClose: () => void;
   onSelectMode: (mode: GameMode) => void;
+  playerName: string;
+  onPlayerNameChange: (name: string) => void;
 }
 
 export function GameModeDialog({
   open,
   onClose,
   onSelectMode,
+  playerName,
+  onPlayerNameChange,
 }: GameModeDialogProps) {
+  const tournamentNameIsValid = playerName.trim().length >= 2;
+
   return (
     <Dialog
       open={open}
@@ -112,7 +119,7 @@ export function GameModeDialog({
 
             <Typography
               color="text.secondary"
-              sx={{ mb: 3 }}
+              sx={{ mb: 2 }}
             >
               Compete for the highest score
               over 12 quarters. Profit, market
@@ -121,9 +128,22 @@ export function GameModeDialog({
               your final score.
             </Typography>
 
+            <TextField
+              fullWidth
+              label="Student name"
+              value={playerName}
+              onChange={(event) =>
+                onPlayerNameChange(event.target.value)
+              }
+              helperText="Enter the name that should appear on the class leaderboard."
+              slotProps={{ htmlInput: { maxLength: 60 } }}
+              sx={{ mb: 2 }}
+            />
+
             <Button
               variant="outlined"
               fullWidth
+              disabled={!tournamentNameIsValid}
               onClick={() =>
                 onSelectMode("Tournament")
               }
