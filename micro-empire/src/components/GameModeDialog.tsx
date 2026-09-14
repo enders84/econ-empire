@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
   Box,
   Button,
@@ -15,126 +17,78 @@ interface GameModeDialogProps {
   open: boolean;
   onClose: () => void;
   onSelectMode: (mode: GameMode) => void;
-  playerName: string;
-  onPlayerNameChange: (name: string) => void;
 }
 
 export function GameModeDialog({
   open,
   onClose,
   onSelectMode,
-  playerName,
-  onPlayerNameChange,
 }: GameModeDialogProps) {
-  const tournamentNameIsValid = playerName.trim().length >= 2;
+  const [tournamentName, setTournamentName] = useState("");
+  const tournamentNameIsValid = tournamentName.trim().length >= 2;
+
+  const startTournament = () => {
+    const trimmedName = tournamentName.trim();
+    if (trimmedName.length < 2) return;
+
+    sessionStorage.setItem("microEmpirePlayerName", trimmedName);
+    onSelectMode("Tournament");
+  };
+
+  const startLearning = () => {
+    sessionStorage.removeItem("microEmpirePlayerName");
+    onSelectMode("Learning");
+  };
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      fullWidth
-      maxWidth="md"
-    >
-      <DialogTitle
-        sx={{
-          fontWeight: 800,
-          fontSize: "1.6rem",
-        }}
-      >
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+      <DialogTitle sx={{ fontWeight: 800, fontSize: "1.6rem" }}>
         Choose Game Mode
       </DialogTitle>
 
       <DialogContent>
-        <Typography
-          color="text.secondary"
-          sx={{ mb: 3 }}
-        >
+        <Typography color="text.secondary" sx={{ mb: 3 }}>
           Choose how you want to play Micro Empire.
         </Typography>
 
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr",
-              md: "1fr 1fr",
-            },
+            gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
             gap: 2,
           }}
         >
-          <Paper
-            variant="outlined"
-            sx={{
-              p: 3,
-              borderRadius: 3,
-            }}
-          >
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: 800,
-                mb: 1,
-              }}
-            >
+          <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+            <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>
               Learning Mode
             </Typography>
 
-            <Typography
-              color="text.secondary"
-              sx={{ mb: 3 }}
-            >
-              Practice freely with no time
-              limit. Explore market structures,
-              experiment with decisions, and
-              complete learning challenges.
+            <Typography color="text.secondary" sx={{ mb: 3 }}>
+              Practice freely with no time limit. Explore market structures,
+              experiment with decisions, and complete learning challenges.
             </Typography>
 
-            <Button
-              variant="contained"
-              fullWidth
-              onClick={() =>
-                onSelectMode("Learning")
-              }
-            >
+            <Button variant="contained" fullWidth onClick={startLearning}>
               Start Learning Mode
             </Button>
           </Paper>
 
-          <Paper
-            variant="outlined"
-            sx={{
-              p: 3,
-              borderRadius: 3,
-            }}
-          >
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: 800,
-                mb: 1,
-              }}
-            >
+          <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+            <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>
               Tournament Mode
             </Typography>
 
-            <Typography
-              color="text.secondary"
-              sx={{ mb: 2 }}
-            >
-              Compete for the highest score
-              over 12 quarters. Profit, market
-              share, cash, learning challenges,
-              and strategic decisions affect
+            <Typography color="text.secondary" sx={{ mb: 2 }}>
+              Compete for the highest score over 12 quarters. Profit, market
+              share, cash, learning challenges, and strategic decisions affect
               your final score.
             </Typography>
 
             <TextField
               fullWidth
               label="Student name"
-              value={playerName}
-              onChange={(event) =>
-                onPlayerNameChange(event.target.value)
-              }
+              value={tournamentName}
+              onChange={(event) => setTournamentName(event.target.value)}
               helperText="Enter the name that should appear on the class leaderboard."
               slotProps={{ htmlInput: { maxLength: 60 } }}
               sx={{ mb: 2 }}
@@ -144,9 +98,7 @@ export function GameModeDialog({
               variant="outlined"
               fullWidth
               disabled={!tournamentNameIsValid}
-              onClick={() =>
-                onSelectMode("Tournament")
-              }
+              onClick={startTournament}
             >
               Start Tournament
             </Button>
