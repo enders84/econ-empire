@@ -1,3 +1,4 @@
+import { ECONOMY } from "../../config/economy";
 import type { GameState } from "../../models/GameState";
 
 const clamp = (
@@ -7,55 +8,64 @@ const clamp = (
 ): number => Math.min(Math.max(value, minimum), maximum);
 
 const round = (value: number): number =>
-  Math.round(value * 100) / 100;
+  Math.round(value * 10000) / 10000;
 
 export function calculateInflation(
   previousState: GameState,
   updatedState: GameState,
 ): number {
-  const previousGDP = Math.max(
-    previousState.economy.gdp,
-    1,
-  );
-
-  const currentGDP =
-    updatedState.economy.gdp;
-
   const previousInflation =
     previousState.economy.inflation;
 
-  const gdpGrowth =
-    ((currentGDP - previousGDP) /
-      previousGDP) *
-    100;
-
   const interestRate =
-    updatedState.economy.interestRate;
+    updatedState.policy.policyInterestRate;
+
+  const currentGDP = Math.max(
+    updatedState.economy.gdp,
+    1,
+  );
 
   const governmentShare =
     updatedState.economy.governmentSpending /
-    Math.max(currentGDP, 1);
+    currentGDP;
 
-  // Inflation responds gradually to demand.
-  const demandPressure =
-    gdpGrowth * 0.04;
+  const outputGap = clamp(
+    updatedState.economy.outputGap,
+    -10,
+    10,
+  );
 
-  const spendingPressure =
+  const inflationTarget = 2;
+
+  // GDP above potential raises the target inflation rate.
+  // GDP below potential lowers it.
+  const outputGapEffect =
+    outputGap * 0.15;
+
+  // Spending above 20% of GDP creates additional
+  // demand pressure.
+  const spendingEffect =
     Math.max(0, governmentShare - 0.20) *
-    1.5;
+    8;
 
-  const monetaryPressure =
-    (2.5 - interestRate) * 0.08;
+  // Rates above neutral reduce inflation;
+  // rates below neutral increase it.
+  const interestRateEffect =
+    (ECONOMY.NEUTRAL_INTEREST_RATE -
+      interestRate) *
+    0.20;
 
-  const targetInflation =
-    previousInflation +
-    demandPressure +
-    spendingPressure +
-    monetaryPressure;
+  const targetInflation = clamp(
+    inflationTarget +
+      outputGapEffect +
+      spendingEffect +
+      interestRateEffect,
+    ECONOMY.MIN_INFLATION,
+    ECONOMY.MAX_INFLATION,
+  );
 
-  // Inflation has inertia—it only moves partway
-  // toward the target each quarter.
-  const adjustmentSpeed = 0.20;
+  const adjustmentSpeed =
+    ECONOMY.INFLATION_ADJUSTMENT;
 
   const inflation =
     previousInflation +
@@ -64,6 +74,10 @@ export function calculateInflation(
       adjustmentSpeed;
 
   return round(
-    clamp(inflation, -2, 15),
+    clamp(
+      inflation,
+      ECONOMY.MIN_INFLATION,
+      ECONOMY.MAX_INFLATION,
+    ),
   );
 }

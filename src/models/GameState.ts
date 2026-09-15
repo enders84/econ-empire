@@ -1,3 +1,7 @@
+import type { HistoryPoint } from "./History";
+import type { PolicyState } from "./PolicyState";
+import type { NewsItem } from "./NewsItem";
+import type { ActiveEvent } from "./ActiveEvent";
 export interface EconomyState {
   gdp: number;
   potentialGdp: number;
@@ -13,6 +17,13 @@ export interface EconomyState {
   inflation: number;
   unemployment: number;
   interestRate: number;
+
+  businessCycle:
+    | "Expansion"
+    | "Boom"
+    | "Slowdown"
+    | "Recession"
+    | "Recovery";
 }
 
 export interface TreasuryState {
@@ -35,18 +46,26 @@ export interface TreasuryState {
 
 export interface PoliticalState {
   approval: number;
-
   electionYear: number;
   currentYear: number;
+
+  lastElectionYear?: number;
+  lastElectionResult?: "Won" | "Lost";
 }
 
 export interface GameState {
   quarter: number;
 
   economy: EconomyState;
-
   treasury: TreasuryState;
-
   politics: PoliticalState;
+  policy: PolicyState;
+  
+  history: HistoryPoint[];
+  news: NewsItem[];
+  activeEvents: ActiveEvent[];
+  currentEventTitle?: string;
+  currentEventDescription?: string;
 }
 
+export type { HistoryPoint } from "./History";

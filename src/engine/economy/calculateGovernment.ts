@@ -1,20 +1,25 @@
 import type { GameState } from "../../models/GameState";
 
-export function calculateGovernment(state: GameState): number {
+const round = (value: number): number =>
+  Math.round(value * 100) / 100;
+
+export function calculateGovernment(
+  state: GameState,
+): number {
   const {
-    educationSpending,
-    healthcareSpending,
-    defenseSpending,
-    infrastructureSpending,
-    scienceSpending,
-  } = state.treasury;
+    educationBudget,
+    healthcareBudget,
+    defenseBudget,
+    infrastructureBudget,
+    scienceBudget,
+  } = state.policy;
 
   const governmentSpending =
-    educationSpending +
-    healthcareSpending +
-    defenseSpending +
-    infrastructureSpending +
-    scienceSpending;
+    educationBudget +
+    healthcareBudget +
+    defenseBudget +
+    infrastructureBudget +
+    scienceBudget;
 
-  return Math.max(0, governmentSpending);
+  return round(governmentSpending);
 }

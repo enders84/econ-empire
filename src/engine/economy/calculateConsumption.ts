@@ -13,55 +13,99 @@ export function calculateConsumption(
   state: GameState,
 ): number {
   const {
-    gdp,
+    potentialGdp,
     consumption: previousConsumption,
     unemployment,
     inflation,
-    interestRate,
   } = state.economy;
 
-  const { incomeTax } = state.treasury;
+  const incomeTax =
+    state.policy.incomeTaxRate;
 
-  const taxRate = clamp(incomeTax / 100, 0, 1);
+  const interestRate =
+    state.policy.policyInterestRate;
 
-  const disposableIncome =
-    gdp * (1 - taxRate);
+  const taxRate = clamp(
+    incomeTax / 100,
+    0,
+    1,
+  );
 
+  /*
+   * LONG-RUN CONSUMPTION
+   *
+   * Consumption is anchored to potential GDP rather
+   * than current GDP. This prevents a temporary GDP
+   * decline from creating a permanent downward spiral.
+   */
+  const potentialDisposableIncome =
+    potentialGdp * (1 - taxRate);
+
+  const marginalPropensityToConsume = 0.80;
+
+  const baseConsumption =
+    potentialDisposableIncome *
+    marginalPropensityToConsume;
+
+  /*
+   * LABOR MARKET
+   *
+   * 5% unemployment is treated as approximately
+   * normal. Only unemployment above that level
+   * significantly reduces consumption.
+   */
   const unemploymentEffect = clamp(
-    1 - unemployment * 0.01,
-    0.7,
-    1,
+    1 -
+      Math.max(0, unemployment - 5) *
+        0.012,
+    0.80,
+    1.02,
   );
 
+  /*
+   * INFLATION
+   *
+   * 2% is approximately neutral.
+   */
   const inflationEffect = clamp(
-    1 - Math.max(0, inflation - 2) * 0.008,
-    0.8,
-    1,
-  );
-
-  const interestRateEffect = clamp(
-    1 - Math.max(0, interestRate - 2) * 0.006,
+    1 -
+      Math.max(0, inflation - 2) *
+        0.008,
     0.85,
     1,
   );
 
-  const marginalPropensityToConsume = 0.78;
+  /*
+   * INTEREST RATES
+   *
+   * 3% is our neutral policy rate.
+   */
+  const interestRateEffect = clamp(
+    1 -
+      Math.max(0, interestRate - 3) *
+        0.008,
+    0.85,
+    1,
+  );
 
   const targetConsumption =
-    disposableIncome *
-    marginalPropensityToConsume *
+    baseConsumption *
     unemploymentEffect *
     inflationEffect *
     interestRateEffect;
 
-  // Consumption only moves part of the way toward its target each quarter.
-  // This prevents GDP and consumption from collapsing in a feedback loop.
+  /*
+   * Household spending adjusts gradually.
+   */
   const adjustmentSpeed = 0.15;
 
   const consumption =
     previousConsumption +
-    (targetConsumption - previousConsumption) *
+    (targetConsumption -
+      previousConsumption) *
       adjustmentSpeed;
 
-  return round(Math.max(0, consumption));
+  return round(
+    Math.max(0, consumption),
+  );
 }

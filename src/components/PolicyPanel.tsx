@@ -9,6 +9,8 @@ import {
 export interface PolicyDraft {
   incomeTax: number;
   interestRate: number;
+  tariffRate: number;
+
   educationSpending: number;
   healthcareSpending: number;
   defenseSpending: number;
@@ -159,6 +161,17 @@ export default function PolicyPanel({
             }}
           >
             <PolicySlider
+              label="Tariff Rate"
+              value={policies.tariffRate}
+              minimum={0}
+              maximum={30}
+              step={1}
+              suffix="%"
+              onChange={(value) =>
+                onPolicyChange("tariffRate", value)
+              }
+            />
+            <PolicySlider
               label="Income Tax"
               value={policies.incomeTax}
               minimum={0}
@@ -207,7 +220,7 @@ export default function PolicyPanel({
               minimum={0}
               maximum={100}
               step={1}
-              suffix=""
+              suffix="B"
               onChange={(value) =>
                 onPolicyChange("educationSpending", value)
               }
@@ -219,7 +232,7 @@ export default function PolicyPanel({
               minimum={0}
               maximum={100}
               step={1}
-              suffix=""
+              suffix="B"
               onChange={(value) =>
                 onPolicyChange("healthcareSpending", value)
               }
@@ -231,7 +244,7 @@ export default function PolicyPanel({
               minimum={0}
               maximum={100}
               step={1}
-              suffix=""
+              suffix="B"
               onChange={(value) =>
                 onPolicyChange(
                   "infrastructureSpending",
@@ -246,7 +259,7 @@ export default function PolicyPanel({
               minimum={0}
               maximum={100}
               step={1}
-              suffix=""
+              suffix="B"
               onChange={(value) =>
                 onPolicyChange("defenseSpending", value)
               }
@@ -258,7 +271,7 @@ export default function PolicyPanel({
               minimum={0}
               maximum={100}
               step={1}
-              suffix=""
+              suffix="B"
               onChange={(value) =>
                 onPolicyChange("scienceSpending", value)
               }

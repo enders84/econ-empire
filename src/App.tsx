@@ -1,3 +1,4 @@
+import Dashboard from "./components/dashboard/Dashboard";
 import { useState } from "react";
 import {
   AppBar,
@@ -5,14 +6,21 @@ import {
   Button,
   Container,
   CssBaseline,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Paper,
   Stack,
+  Tab,
+  Tabs,
   ThemeProvider,
   Toolbar,
   Typography,
   createTheme,
 } from "@mui/material";
 
+import HistoryChart from "./components/HistoryChart";
 import PolicyPanel, {
   type PolicyDraft,
 } from "./components/PolicyPanel";
@@ -20,7 +28,15 @@ import StatCard from "./components/StatCard";
 import { createDefaultGameState } from "./data/initialCountries";
 import { advanceQuarter } from "./engine/advanceQuarter";
 import type { GameState } from "./models/GameState";
+import QuarterlyReportDialog from "./components/reports/QuarterlyReportDialog";
+import { generateQuarterlyReport } from "./engine/reports/generateQuarterlyReport";
+import { createCountries } from "./data/createCountries";
+import { advanceWorld } from "./engine/world/advanceWorld";
+import type { Country } from "./models/Country";
+import WorldEconomyPanel from "./components/world/WorldEconomyPanel";
 
+import type { QuarterlyReport } from "./models/QuarterlyReport";
+import DeveloperPanel from "./components/debug/DeveloperPanel";
 const theme = createTheme({
   palette: {
     mode: "dark",
@@ -38,6 +54,7 @@ function createPolicies(state: GameState): PolicyDraft {
   return {
     incomeTax: state.treasury.incomeTax,
     interestRate: state.economy.interestRate,
+    tariffRate: state.policy.tariffRate,
     educationSpending: state.treasury.educationSpending,
     healthcareSpending: state.treasury.healthcareSpending,
     defenseSpending: state.treasury.defenseSpending,
@@ -52,16 +69,35 @@ const money = (value: number): string =>
     currency: "USD",
     maximumFractionDigits: 2,
   }).format(value);
-const percent = (value: number) => `${value.toFixed(1)}%`;
+
+const percent = (value: number): string =>
+  `${value.toFixed(1)}%`;
 
 function App() {
-  const [gameState, setGameState] = useState<GameState>(() =>
+  const [gameState, setGameState] = useState(() =>
     createDefaultGameState(),
   );
-
-  const [policies, setPolicies] = useState<PolicyDraft>(() =>
+  const [worldCountries, setWorldCountries] =
+  useState<Country[]>(() =>
+    createCountries("united-states"),
+  );
+  const [policies, setPolicies] = useState(() =>
     createPolicies(createDefaultGameState()),
   );
+
+  const lostElection =
+    gameState.politics.lastElectionResult === "Lost";
+
+  const electionYear =
+    gameState.politics.lastElectionYear;
+
+  const [chartTab, setChartTab] = useState(0);
+
+  const [quarterlyReport, setQuarterlyReport] =
+    useState<QuarterlyReport | null>(null);
+
+  const [reportOpen, setReportOpen] =
+    useState(false);
 
   const handlePolicyChange = (
     policy: keyof PolicyDraft,
@@ -73,30 +109,91 @@ function App() {
     }));
   };
 
-  const handleNextQuarter = () => {
-    setGameState((current) => {
-      const stateWithPolicies: GameState = {
-        ...current,
-        economy: {
-          ...current.economy,
-          interestRate: policies.interestRate,
-        },
-        treasury: {
-          ...current.treasury,
-          incomeTax: policies.incomeTax,
-          educationSpending: policies.educationSpending,
-          healthcareSpending: policies.healthcareSpending,
-          defenseSpending: policies.defenseSpending,
-          infrastructureSpending: policies.infrastructureSpending,
-          scienceSpending: policies.scienceSpending,
-        },
-      };
+  const handleResetGame = () => {
+    const freshState = createDefaultGameState();
 
-          return advanceQuarter(stateWithPolicies);
-    });
+    setGameState(freshState);
+    setPolicies(createPolicies(freshState));
+     setWorldCountries(
+    createCountries("united-states"),
+  );
+    setQuarterlyReport(null);
+    setReportOpen(false);
+
+    setChartTab(0);
+  };
+
+  const handleNextQuarter = () => {
+    const stateWithPolicies: GameState = {
+      ...gameState,
+
+      policy: {
+        incomeTaxRate: policies.incomeTax,
+        tariffRate: policies.tariffRate,
+        educationBudget:
+          policies.educationSpending,
+        healthcareBudget:
+          policies.healthcareSpending,
+        defenseBudget:
+          policies.defenseSpending,
+        infrastructureBudget:
+          policies.infrastructureSpending,
+        scienceBudget:
+          policies.scienceSpending,
+        
+        policyInterestRate:
+          policies.interestRate,
+      },
+
+      economy: {
+        ...gameState.economy,
+        interestRate:
+          policies.interestRate,
+      },
+
+      treasury: {
+        ...gameState.treasury,
+        incomeTax:
+          policies.incomeTax,
+        educationSpending:
+          policies.educationSpending,
+        healthcareSpending:
+          policies.healthcareSpending,
+        defenseSpending:
+          policies.defenseSpending,
+        infrastructureSpending:
+          policies.infrastructureSpending,
+        scienceSpending:
+          policies.scienceSpending,
+      },
+    };
+
+    const nextState =
+      advanceQuarter(stateWithPolicies);
+    const worldWithPlayerUpdated =
+  worldCountries.map((country) =>
+    country.isPlayerControlled
+      ? {
+          ...country,
+          economy: nextState,
+        }
+      : country,
+  );
+
+    const nextWorld =
+  advanceWorld(worldWithPlayerUpdated);
+    const report =
+      generateQuarterlyReport(
+        gameState,
+        nextState,
+      );
+
+    setGameState(nextState);
+    setWorldCountries(nextWorld);
+    setQuarterlyReport(report);
+    setReportOpen(true);
   };
   return (
-    
     <ThemeProvider theme={theme}>
       <CssBaseline />
 
@@ -112,14 +209,83 @@ function App() {
             </Typography>
           </Box>
 
-          <Typography variant="h6">
-            Quarter {gameState.quarter}
-          </Typography>
+          <Box sx={{ textAlign: "right" }}>
+            <Typography variant="h6">
+              Year {gameState.politics.currentYear}, Quarter{" "}
+              {gameState.quarter}
+            </Typography>
+
+            <Typography variant="body2">
+              Approval: {percent(gameState.politics.approval)}
+            </Typography>
+          </Box>
         </Toolbar>
       </AppBar>
 
       <Container maxWidth="xl" sx={{ py: 4 }}>
         <Stack spacing={3}>
+          <Dashboard gameState={gameState} />
+          <DeveloperPanel gameState={gameState} />
+          {/* GDP components */}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "repeat(2, 1fr)",
+                md: "repeat(5, 1fr)",
+              },
+              gap: 2,
+            }}
+          >
+            <StatCard
+              title="Consumption"
+              value={money(gameState.economy.consumption)}
+            />
+
+            <StatCard
+              title="Investment"
+              value={money(gameState.economy.investment)}
+            />
+
+            <StatCard
+              title="Government"
+              value={money(
+                gameState.economy.governmentSpending,
+              )}
+            />
+
+            <StatCard
+              title="Exports"
+              value={money(gameState.economy.exports)}
+            />
+
+            <StatCard
+              title="Imports"
+              value={money(gameState.economy.imports)}
+            />
+          </Box>
+
+          {/* GDP formula */}
+          <Paper sx={{ p: 2 }}>
+            <Typography
+              variant="body1"
+              sx={{ fontWeight: 700 }}
+            >
+              GDP Check
+            </Typography>
+
+            <Typography sx={{ color: "text.secondary" }}>
+              {money(gameState.economy.consumption)} +{" "}
+              {money(gameState.economy.investment)} +{" "}
+              {money(gameState.economy.governmentSpending)} + ({" "}
+              {money(gameState.economy.exports)} −{" "}
+              {money(gameState.economy.imports)} ) ={" "}
+              {money(gameState.economy.gdp)}
+            </Typography>
+          </Paper>
+
+          {/* Treasury details */}
           <Box
             sx={{
               display: "grid",
@@ -132,143 +298,213 @@ function App() {
             }}
           >
             <StatCard
-              title="GDP"
-              value={money(gameState.economy.gdp)}
+              title="Tax Revenue"
+              value={money(gameState.treasury.revenue)}
             />
 
             <StatCard
-              title="Inflation"
-              value={percent(gameState.economy.inflation)}
+              title="Total Expenses"
+              value={money(gameState.treasury.expenses)}
             />
 
             <StatCard
-              title="Unemployment"
-              value={percent(gameState.economy.unemployment)}
+              title="Interest Payments"
+              value={money(
+                gameState.treasury.interestPayments,
+              )}
             />
 
             <StatCard
-              title="Interest Rate"
-              value={percent(gameState.economy.interestRate)}
+              title="Program Spending"
+              value={money(
+                gameState.economy.governmentSpending,
+              )}
             />
           </Box>
 
-          <Box
-  sx={{
-    display: "grid",
-    gridTemplateColumns: {
-      xs: "1fr",
-      sm: "repeat(2, 1fr)",
-      md: "repeat(4, 1fr)",
-    },
-    gap: 2,
-  }}
->
-  <StatCard
-    title="National Debt"
-    value={money(gameState.treasury.debt)}
-  />
+          {/* Tabbed charts */}
+          <Paper sx={{ overflow: "hidden" }}>
+            <Tabs
+              value={chartTab}
+              onChange={(_, newValue: number) =>
+                setChartTab(newValue)
+              }
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{
+                borderBottom: 1,
+                borderColor: "divider",
+                px: 2,
+              }}
+            >
+              <Tab label="Economy" />
+              <Tab label="Growth" />
+              <Tab label="Labor" />
+              <Tab label="Treasury" />
+              <Tab label="Politics" />
+              <Tab label="News" />
+              <Tab label="World Rankings" />
+              </Tabs>
 
-  <StatCard
-    title="Debt-to-GDP"
-    value={percent(gameState.treasury.debtToGdp)}
-  />
+           <Box sx={{ p: 3 }}>
+  {chartTab === 0 && (
+    <HistoryChart
+      title="GDP and Economic Capacity"
+      data={gameState.history}
+      lines={[
+        {
+          dataKey: "gdp",
+          label: "Actual GDP",
+        },
+        {
+          dataKey: "potentialGdp",
+          label: "Potential GDP",
+        },
+      ]}
+    />
+  )}
 
-  <StatCard
-    title="Budget Balance"
-    value={money(gameState.treasury.budgetBalance)}
-  />
+  {chartTab === 1 && (
+    <HistoryChart
+      title="GDP Growth and Output Gap"
+      data={gameState.history}
+      lines={[
+        {
+          dataKey: "gdpGrowth",
+          label: "GDP Growth",
+        },
+        {
+          dataKey: "outputGap",
+          label: "Output Gap",
+        },
+      ]}
+    />
+  )}
 
-  <StatCard
-    title="Approval Rating"
-    value={percent(gameState.politics.approval)}
-  />
-</Box>
+  {chartTab === 2 && (
+    <HistoryChart
+      title="Inflation and Unemployment"
+      data={gameState.history}
+      lines={[
+        {
+          dataKey: "inflation",
+          label: "Inflation",
+        },
+        {
+          dataKey: "unemployment",
+          label: "Unemployment",
+        },
+      ]}
+    />
+  )}
 
-<Box
-  sx={{
-    display: "grid",
-    gridTemplateColumns: {
-      xs: "1fr",
-      sm: "repeat(2, 1fr)",
-      md: "repeat(5, 1fr)",
-    },
-    gap: 2,
-  }}
->
-  <StatCard
-    title="Consumption"
-    value={money(gameState.economy.consumption)}
-  />
+  {chartTab === 3 && (
+    <HistoryChart
+      title="National Debt"
+      data={gameState.history}
+      lines={[
+        {
+          dataKey: "debt",
+          label: "Debt",
+        },
+      ]}
+    />
+  )}
 
-  <StatCard
-    title="Investment"
-    value={money(gameState.economy.investment)}
-  />
+  {chartTab === 4 && (
+    <HistoryChart
+      title="Approval Rating"
+      data={gameState.history}
+      lines={[
+        {
+          dataKey: "approval",
+          label: "Approval",
+        },
+      ]}
+    />
+  )}
+  {chartTab === 5 && (
+  <Box>
+    <Typography
+      variant="h6"
+      sx={{
+        fontWeight: 800,
+        mb: 2,
+      }}
+    >
+      Economic News
+    </Typography>
 
-  <StatCard
-    title="Government"
-    value={money(gameState.economy.governmentSpending)}
-  />
+    {gameState.news.length > 0 ? (
+      <Stack spacing={2}>
+        {[...gameState.news]
+          .reverse()
+          .map((item, index) => (
+            <Paper
+              key={`${item.year}-${item.quarter}-${index}`}
+              variant="outlined"
+              sx={{
+                p: 2,
+                backgroundColor:
+                  "background.default",
+              }}
+            >
+              <Typography
+                variant="overline"
+                sx={{
+                  color: "primary.main",
+                  fontWeight: 800,
+                }}
+              >
+                Year {item.year} • Quarter{" "}
+                {item.quarter}
+              </Typography>
 
-  <StatCard
-    title="Exports"
-    value={money(gameState.economy.exports)}
-  />
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 800,
+                  mt: 0.5,
+                }}
+              >
+                {item.title}
+              </Typography>
 
-  <StatCard
-    title="Imports"
-    value={money(gameState.economy.imports)}
-  />
-</Box>
-      <Paper sx={{ p: 2 }}>
-  <Typography variant="body1" sx={{ fontWeight: 700 }}>
-    GDP Check
-  </Typography>
+              <Typography
+                sx={{
+                  color: "text.secondary",
+                  mt: 1,
+                }}
+              >
+                {item.description}
+              </Typography>
+            </Paper>
+          ))}
+      </Stack>
+    ) : (
+      <Typography
+        sx={{
+          color: "text.secondary",
+        }}
+      >
+        No major economic events have occurred yet.
+      </Typography>
+    )}
+  </Box>
+)}
 
-  <Typography sx={{ color: "text.secondary" }}>
-    {money(gameState.economy.consumption)} +{" "}
-    {money(gameState.economy.investment)} +{" "}
-    {money(gameState.economy.governmentSpending)} + ({" "}
-    {money(gameState.economy.exports)} −{" "}
-    {money(gameState.economy.imports)} ) ={" "}
-    {money(gameState.economy.gdp)}
-  </Typography>
-</Paper>
-        <Box
-  sx={{
-    display: "grid",
-    gridTemplateColumns: {
-      xs: "1fr",
-      sm: "repeat(2, 1fr)",
-      md: "repeat(4, 1fr)",
-    },
-    gap: 2,
-  }}
->
-  <StatCard
-    title="Tax Revenue"
-    value={money(gameState.treasury.revenue)}
+{chartTab === 6 && (
+  <WorldEconomyPanel
+    countries={worldCountries}
   />
+)}
+      </Box>
+      </Paper>
 
-  <StatCard
-    title="Total Expenses"
-    value={money(gameState.treasury.expenses)}
-  />
-
-  <StatCard
-    title="Interest Payments"
-    value={money(gameState.treasury.interestPayments)}
-  />
-
-  <StatCard
-    title="Program Spending"
-    value={money(gameState.economy.governmentSpending)}
-  />
-</Box>
-          <PolicyPanel
-            policies={policies}
-            onPolicyChange={handlePolicyChange}
-          />
+<PolicyPanel
+  policies={policies}
+  onPolicyChange={handlePolicyChange}
+/>
 
           <Paper sx={{ p: 3 }}>
             <Stack
@@ -283,12 +519,16 @@ function App() {
               }}
             >
               <Box>
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 700 }}
+                >
                   Advance the Simulation
                 </Typography>
 
                 <Typography sx={{ color: "text.secondary" }}>
-                  Apply the selected policies and simulate the next quarter.
+                  Apply the selected policies and simulate the
+                  next quarter.
                 </Typography>
               </Box>
 
@@ -296,13 +536,61 @@ function App() {
                 variant="contained"
                 size="large"
                 onClick={handleNextQuarter}
+                disabled={lostElection}
               >
                 Advance Quarter
               </Button>
             </Stack>
           </Paper>
-        </Stack>
-      </Container>
+              </Stack>
+            </Container>
+
+      <QuarterlyReportDialog
+        open={reportOpen}
+        report={quarterlyReport}
+        onClose={() => setReportOpen(false)}
+      />
+      <Dialog
+  open={lostElection && !reportOpen}
+  maxWidth="sm"
+  fullWidth
+>
+  <DialogTitle>
+    Election Defeat
+  </DialogTitle>
+
+  <DialogContent>
+    <Typography
+      variant="h5"
+      sx={{
+        fontWeight: 800,
+        mb: 2,
+      }}
+    >
+      Your Government Has Lost Re-Election
+    </Typography>
+
+    <Typography sx={{ color: "text.secondary" }}>
+      Voters rejected the government in the Year{" "}
+      {electionYear} election. Your administration
+      has come to an end.
+    </Typography>
+  </DialogContent>
+
+  <DialogActions
+    sx={{
+      px: 3,
+      pb: 3,
+    }}
+  >
+    <Button
+      variant="contained"
+      onClick={handleResetGame}
+    >
+      Start New Game
+    </Button>
+  </DialogActions>
+</Dialog>
     </ThemeProvider>
   );
 }

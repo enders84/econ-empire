@@ -1,3 +1,4 @@
+import { ECONOMY } from "../../config/economy";
 import type { GameState } from "../../models/GameState";
 
 const clamp = (
@@ -7,48 +8,50 @@ const clamp = (
 ): number => Math.min(Math.max(value, minimum), maximum);
 
 const round = (value: number): number =>
-  Math.round(value * 100) / 100;
+  Math.round(value * 10000) / 10000;
 
 export function calculateUnemployment(
   previousState: GameState,
   updatedState: GameState,
 ): number {
-  const previousGDP = Math.max(
-    previousState.economy.gdp,
-    1,
-  );
-
-  const currentGDP =
-    updatedState.economy.gdp;
-
   const previousUnemployment =
     previousState.economy.unemployment;
 
-  const gdpGrowth =
-    ((currentGDP - previousGDP) /
-      previousGDP) *
-    100;
+  const interestRate =
+    updatedState.policy.policyInterestRate;
 
-  // Okun-style relationship:
-  // falling GDP raises unemployment,
-  // growing GDP lowers unemployment.
-  const growthEffect =
-    gdpGrowth * -0.04;
+  // Prevent an extreme output gap from immediately
+  // driving unemployment to its maximum.
+  const outputGap = clamp(
+    updatedState.economy.outputGap,
+    -10,
+    10,
+  );
 
+  const naturalUnemploymentRate = 5;
+
+  // GDP above potential lowers the target rate.
+  // GDP below potential raises the target rate.
+  const outputGapEffect =
+    outputGap * -0.25;
+
+  // Rates above neutral weaken employment;
+  // rates below neutral support employment.
   const interestRateEffect =
-    Math.max(
-      0,
-      updatedState.economy.interestRate - 4,
-    ) * 0.02;
+    (interestRate -
+      ECONOMY.NEUTRAL_LABOR_RATE) *
+    0.10;
 
-  const targetUnemployment =
-    previousUnemployment +
-    growthEffect +
-    interestRateEffect;
+  const targetUnemployment = clamp(
+    naturalUnemploymentRate +
+      outputGapEffect +
+      interestRateEffect,
+    ECONOMY.MIN_UNEMPLOYMENT,
+    ECONOMY.MAX_UNEMPLOYMENT,
+  );
 
-  // Unemployment changes gradually rather than
-  // jumping immediately after one weak quarter.
-  const adjustmentSpeed = 0.35;
+  const adjustmentSpeed =
+    ECONOMY.UNEMPLOYMENT_ADJUSTMENT;
 
   const unemployment =
     previousUnemployment +
@@ -57,6 +60,10 @@ export function calculateUnemployment(
       adjustmentSpeed;
 
   return round(
-    clamp(unemployment, 2, 25),
+    clamp(
+      unemployment,
+      ECONOMY.MIN_UNEMPLOYMENT,
+      ECONOMY.MAX_UNEMPLOYMENT,
+    ),
   );
 }

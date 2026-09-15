@@ -1,4 +1,5 @@
 import type { GameState } from "../../models/GameState";
+import { ECONOMY } from "../../config/economy";
 
 const clamp = (
   value: number,
@@ -13,50 +14,71 @@ export function calculateInvestment(
   state: GameState,
 ): number {
   const {
-    gdp,
+    potentialGdp,
+    outputGap,
     investment: previousInvestment,
     inflation,
     unemployment,
-    interestRate,
   } = state.economy;
 
-  const normalInvestmentShare = 0.2;
+  const interestRate =
+    state.policy.policyInterestRate;
 
-  const targetInvestmentBeforeConditions =
-    gdp * normalInvestmentShare;
+  const normalInvestmentShare = 0.20;
 
+  // Anchor long-run investment to productive capacity,
+  // not current GDP. This prevents GDP and investment
+  // from reinforcing each other indefinitely.
+  const baseInvestment =
+    potentialGdp * normalInvestmentShare;
+
+  // Lower rates stimulate investment;
+  // higher rates discourage investment.
   const interestRateEffect = clamp(
     1 - (interestRate - 3) * 0.025,
     0.65,
-    1.2,
+    1.20,
   );
 
+  // High inflation creates uncertainty and reduces
+  // real business investment.
   const inflationEffect = clamp(
     1 - Math.max(0, inflation - 3) * 0.015,
     0.75,
     1.05,
   );
 
+  // Weak labor markets reduce expected demand.
   const laborMarketEffect = clamp(
     1 - Math.max(0, unemployment - 5) * 0.015,
     0.75,
     1.05,
   );
 
+  // Firms invest somewhat more when capacity is tight,
+  // but the effect is deliberately limited.
+  const outputGapEffect = clamp(
+    1 + outputGap * 0.01,
+    0.90,
+    1.10,
+  );
+
   const targetInvestment =
-    targetInvestmentBeforeConditions *
+    baseInvestment *
     interestRateEffect *
     inflationEffect *
-    laborMarketEffect;
+    laborMarketEffect *
+    outputGapEffect;
 
-  // Investment moves gradually toward its target.
-  // This prevents a falling-GDP feedback loop.
-  const adjustmentSpeed = 0.12;
+  const adjustmentSpeed =
+    ECONOMY.INVESTMENT_ADJUSTMENT;
 
   const investment =
     previousInvestment +
     (targetInvestment - previousInvestment) *
       adjustmentSpeed;
 
-  return round(Math.max(0, investment));
+  return round(
+    Math.max(0, investment),
+  );
 }

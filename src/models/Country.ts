@@ -34,4 +34,7 @@ export interface Country {
   strategy: CountryStrategy;
 
   economy: GameState;
+
+  tradePartners: CountryId[];
+  influence: number;
 }
